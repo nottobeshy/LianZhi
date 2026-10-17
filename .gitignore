@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.*
+!.env.example
+runtime/
+.test-runtime/
+*.db
+*.db-*
+*.sqlite*
+*.log
+*.mp4
+*.mov
+*.webm
+*.wav
+models/
+*.key
+# Independent visual experiment owned by ZCode; not part of this engineering branch.
+prototypes/

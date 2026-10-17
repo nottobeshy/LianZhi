@@ -1,0 +1,216 @@
+# 交接文档（HANDOFF）
+
+> 惯例：**每次会话结束前，更新本文档**（新增一行「更新记录」，并刷新「当前状态」「模块与数据」「下一步」）。新会话开始时先读本文档恢复上下文。
+
+- 项目：选题罗盘（Knowledge Compass）· 2026 武汉 1024 AI 黑客松参赛作品
+- 关键截止：作品提交 **2026-10-22 17:00**（内部目标 16:00 前提交）；报名截止约 10-20（指引有「20 日前 / 开放至 20 日」歧义，需官方确认，建议 10-19 前完成）
+- 时区：本地时间（UTC+8）
+
+## 更新记录
+
+| 日期 | 会话 | 摘要 |
+| --- | --- | --- |
+| 2026-10-13 | ZCode 第 1 次 | 需求文档审阅；文档复制入工作区；创建演示原型 demo/index.html 与本交接文档 |
+| 2026-10-13 | ZCode 第 2 次 | 汇总全部文档；提出「知识挑战配置抽题」仪式感设计方案（候选词条随机闪现→锁定一张，两方向：牌格抽签式/罗盘表盘式），待用户决策，未改动任何功能代码 |
+| 2026-10-13 | ZCode 第 3 次 | 按用户产品化提示词重构 demo：拆分为 index.html + css/app.css + js/{mock-data,store,ui,draw,views,app}.js；首页改五屏落地页；实现抽题仪式（方案 A 牌格 + 指针锁定，修复 beginDraw 缺 step=1 的 bug）；统一状态标签体系与 Demo Mock 标识；题库扩至 8 词条（coin 富数据 + 模板）；浏览器烟雾测试通过主链路。**应用编码审批（DEC-01～07）仍未给出，demo 改进属界面原型迭代** |
+| 2026-10-13 | ZCode 第 4 次 | 按用户增量任务改造 demo：新增 `js/vocab.js` Markdown 词库解析器（受控格式、错误带行号）；在 `store.js` 增加词库层（默认词库 + 用户导入 + localStorage 持久化）；`draw.js` 重写为减速抽题（屏幕中央单卡片、ease-out 三次曲线 60→400ms、约 16 次切换 / 4–5 秒、跳过 / 取消 / 重复点击保护 / prefers-reduced-motion / 单候选直落）；挑战 step 0 改造为词库 + 难度 + 预算 + 词条启用 + 池预览；步骤 2 题卡对导入词库做空字段兼容；事件委托补充 `ch:vocab / ch:vocab-del / ch:vocab-import / ch:vocab-clear / ch:diff / ch:term`。**词库仅由 localStorage 持久化，Codex 阶段替换为 SQLite；rich 数据仍仅 coin 词条具备。** |
+| 2026-10-13 | ZCode 第 5 次 | UI 视觉刷新（用户指定 EVA 明日香 / 二号机配色）：`css/app.css` 调色板整体替换为单一暗色主题（炭黑纸面 #0f1013、二号机红 #e8402a、琥珀警告、绿状态色，删除明暗双主题切换）；顶部横幅加 EVA 黄黑警示条纹、页头红线；`html,body` 重置背景 + `overflow-x:clip` 消灭白边与横向滚动；新增 `.kc-tablewrap`（转写表格窄屏横滚）与 ≤600px 键值对堆叠断点、按钮 `:focus-visible` 焦点环。功能逻辑零改动。 |
+| 2026-10-13 | ZCode 第 6 次 | Hallmark audit（1 critical · 7 major · 4 minor）全部修复：引用块由左侧 3px 色条改为 hairline + 色点标记；卡片内 5 处内联描边盒子统一为 `.kc-subpanel`（底色分层），锁定卡去边框改填充；「设计原则」改单卡三行定义式排版（`.kc-principle`）；暗底彩色光晕删除、罗盘辉光降至 token `--primary-glow`(.08)；新增 `--stripe-amber/--stripe-dark` token；`.kc-table/.kc-quote` 启用 `tabular-nums`；🧭 emoji 换 SVG 罗盘记号（`.kc-mark`）；h1/节标题字重 800；删英雄区 eyebrow；导航 nowrap；删除旧牌格动画死样式（`.kc-tile*/.kc-pointer*`，含回弹缓动）；页脚版本号同步 v1.3。Node 校验 16 项全部通过。 |
+| 2026-10-14 | Codex | 按用户本轮明确授权，仅为前端 Demo 增加学习倒计时与 Markdown 范例查看/复制/下载；更新相关测试和本交接文档。此授权不改变 PRD 或后端决策状态。 |
+| 2026-10-16 | ZCode 第 7 次 | **V2 词库需求**：新增 `js/banks.js`（C 语言 10/12/10 · 心理学 10/10/10 · 哲学 10/10/10，受控 Markdown），注册为内置词库（`__bank_c__/__bank_psy__/__bank_phil__`，统一经 VocabParser 解析，范例与内置数据同源）；范例区改三库切换 + 复制 + 下载；`store.js` 持久化改为仅存用户词库（内置每次从代码重建，防旧缓存冻结）；移除 vocab.js 旧 9 条 VOCAB_EXAMPLE。需求映射澄清：「已有 C 语言词库」实为旧 9 条示例；「语言学词库」从未开发；无 FastAPI 后端（真实规划 Streamlit+SQLite）。修复 test-store-2 既有 require.resolve bug；浏览器实测三库抽题/范例/兼容性通过。 |
+| 2026-10-16 | ZCode 第 8 次 | **词库质量重构 + 倒计时视觉放大**：①「演示题库（默认）」（`__default__`，8 条按索引分档）重构为**概率论**（`__bank_prob__`，10/10/10，概率直觉/悖论/统计推断选题），加载时将遗留 `activeVocabId='__default__'` 重映射，旧内置条目按 builtin 跳过，用户词库不受影响（浏览器实测：旧格式 localStorage 重载后用户词库保留、活动词库落到概率论）；store.js 移除 buildDefaultVocab。②心理学改为经典效应导向（巴纳姆/聚光灯/锚定/认知失调/斯特鲁普等 10/10/10）、哲学改为思想实验与悖论导向（忒修斯之船/电车难题/缸中之脑/纽科姆问题等 10/10/10）、C 语言提高实操错误类概念比例（空字符/数组越界/未定义行为/内存对齐等，10/12/12）；coin 与「相关不等于因果」两词条映射回 MOCK.pool 富数据。③倒计时改为视觉焦点：桌面 72px / 窄屏 48px、tabular-nums、进度条 + aria、按钮 44px 触控高、结束文案「学习时间结束，现在试着用自己的语言解释这个知识点。」；计时状态机零改动（node 断言 + 浏览器全按钮流实测含时间快进结束态）。④范例区扩为四库；档案领域下拉改为从词库动态生成（修复写死「概率统计/AI 基础」）。测试：node 4 库解析/计数/ID 稳定/coin 映射/legacy 重映射全过；浏览器改名/四库抽题/难度筛选（概率论 30/进阶 10）/范例/倒计时/375px 无溢出全过。教训：浏览器普通 reload 会命中旧 js/css 缓存，需 fetch(cache:'reload') 预热后 reload。Hallmark 纪律核对（焦点层级/tabular-nums/无闪烁/触控目标），Ponytail 最小改动。 |
+| 2026-10-16 | Codex 基线与增量质量检查 | 通读 docs/00–05、Demo 全源码及测试；8 JS 语法通过，3 现有 Node 脚本 exit 0，但发现测试选错内置库/多项无断言；新增 14 组隔离诊断，验证四库 124 条、正常缓存迁移、计时和范例 Blob，复现 P0 缓存覆盖/丢编辑/转写未失效等。只同步文档与新增审计资料，未修业务代码、未安装/下载/调用 API。FastAPI 为待批准候选，DEC 状态未变。 |
+| 2026-10-16 | ZCode 第 9 次 | **抽题音效集成（ZzFX）+ 抽题生命周期修复**：新增 `js/sound.js`（ZzFXMicro v1.4.0 MIT 内嵌，惰性 AudioContext + SoundFx 封装：tick 45ms 节流/lock 恰一次/开关音量持久化/静默失败/手势解锁）；`draw.js` finish(reason) 语义化（done/skip/cancel/fallback）+ onTick/onLock 回调，动画主体零改动，cancel 不再触发锁定音与重渲染（修复 B05）；修复 views.js 单候选/reduced 被 `pool.length>1` 短路不进动画模块的隐藏 bug；app.js 接线 + 设置页音效卡。测试：node 全绿（新增 tests/test-sound.js）+ 浏览器 10 项验收全过。未验证：实际听感、pywebview、真实桌面浏览器。 |
+| 2026-10-16 | ZCode 第 10 次 | **音量修复 + 罗盘动效**。①音量真实原因（先复现取证）：滑条/持久化/label 本身正常，问题是默认 50% 偏响 + **Tick 基础增益 .25 vs Lock .6（同一滑条下 Tick 峰值仅 Lock 的 42%，低音量下 Tick 消失，即用户感知的「音量控制不符预期」）**；修复=默认 25%、Tick .55/Lock .7 档感平衡、保持单一线性映射（遵守不叠加公式）、新增 `effectiveGain()`；0% 静音、25/50/75/100 单调、100% 峰值≤0.7 无削波（node 断言 + 浏览器五档实测）。按用户中途要求**音色机械化**：Tick 改锯齿高频下滑（继电器滴答）、Lock 改方波上滑（金属咔哒）。②首页罗盘：纯 CSS `kc-needle-spin` 15s/圈仅指针旋转，reduced-motion 静止，视图切换 DOM 重建即停止。③抽题罗盘：新增 `js/compass.js`（rAF 指针，转速∝1/切换间隔，初 300°/s→末 45°/s），draw.js 仅参数化 `onTick(i,total)`（主体未动），app.js 接线 onTick/onLock/onDone；不参与抽题结果、无第二套计时器；连点/重渲染先 destroy 旧句柄。验收：正常减速（speed 146→68 实测）、跳过/切页取消/连点/单候选/reduced（静止 speed=0）/静音（罗盘照转、gain=0）/375px（sw=360）全部通过；**前台视觉旋转早期采样 110°/s 已证，收尾时 IAB 面板 visibilityState=hidden 角度冻结（rAF 规范行为，反证不可见零开销）**；实际听感与 reduced-motion 的 CSS 分支未自动化验证（标注人工试听/检查）。Hallmark 用于罗盘布局取舍（上方小仪表 vs 背景大罗盘，选前者：不遮挡、移动端稳）；Ponytail 最小改动。对 Codex 影响：音效偏好键不变；compass.js 为纯展示层可整体复用或替换。 |
+| 2026-10-16 | Codex P0 修复 | 按用户明确授权修复 B01/B02/B03：逐条恢复与异常缓存写保护、词库写失败回滚；现有 Store 保存解释/回答/修正/脚本草稿；转写编辑即撤销确认、冻结确认快照、按版本保留示例报告与历史查看/保存门禁。保留既有音效/罗盘与 Mock 边界。新增 test-p0 12 组正向回归，修正 test-store 误选内置库；5 个测试脚本 exit 0，10 JS 语法通过。真实浏览器未验；未启动 D0/后端，DEC 未变。 |
+
+## 当前状态（2026-10-16 P0 修复后）
+
+- 当前是静态交互 Demo：概率论 30、C 语言 34、心理学 30、哲学 30，合计 124 条；只有名词库，不等于审核知识卡。真实 Python 应用、FastAPI/Streamlit、SQLite、LLM/FFmpeg/ASR、无 Key 历史案例双入口尚未实现。
+- 文档完整报告：[项目基线与增量质量检查](docs/audits/2026-10-16-项目基线与增量质量检查.md)。包含功能矩阵、B01–B12 文件行号/复现/整改建议、文档冲突、FastAPI 风险、D0 条件与下一轮验收。
+- B01/B02/B03 已修并通过 Node 正向回归；当前行为见 [P0 修复记录](docs/audits/2026-10-16-P0修复记录.md)。坏缓存保留原值并暂停词库写入、可浏览已恢复库；写失败回滚并报错；内存草稿跨渲染；修改确认稿立即失效，旧确认快照冻结、旧报告按原版本保留，可确认/保存新结果。
+- 遗留重要项：输入长度上限、稳定知识点关联、FileReader 乱序、其余测试断言；B04 的新稿重存路径已随 B03 修复，建议采纳变更后的保存仍待 P1。B05 另有第 9 次后续改动，本轮保留，不作扩大修复声明。
+- 本轮验证为 Node/内存替身，不是浏览器验收。第 7/8 次浏览器通过声明保留为历史，未获取独立证据附件，也未本轮重验；实际剪贴板、落盘下载导入、375px/其他宽度、失焦与动画交错仍需复验。
+- 本轮实际修改：demo/js/{store,app,views}.js、demo/tests/test-store.js；新增 demo/tests/test-p0.js；同步 README/AGENTS/HANDOFF/demo README、docs/00/03/04/05 与审计历史提示，新增 P0 修复记录。未改 CSS、词库/解析器、音效/罗盘/抽题代码、后端或 DEC；整体 PRD/架构仍待批。
+- 后续影响：可复用当前内存草稿和转写版本边界，但并非协议 v1.0/SQLite 的完整实现；仍需稳定知识身份、异步失败保护和持久化。D0 安装/下载/真实 API 及后端未获本轮授权，等待下一阶段决定。
+
+## 仓库结构（当前，v1.3）
+
+```text
+E:\Projects\KnowledgeCompass\
+├─ HANDOFF.md          # 本文档（每次会话结束更新）
+├─ README.md           # 实际 Demo 与真实应用未实现状态；整体 PRD/后端待批准
+├─ AGENTS.md           # AI 编程协作约束（阅读顺序、批准门槛、范围限制）
+├─ docs\               # 权威需求文档（00–05，自 codex 项目目录复制）
+│   ├─ 00-文档约定与决策.md
+│   ├─ 01-产品需求文档PRD.md
+│   ├─ 02-技术方案与运行安全.md
+│   ├─ 03-数据模型与AI协议.md
+│   ├─ 04-验收与测试计划.md
+│   └─ 05-开发任务与赛事演示.md
+└─ demo\               # 演示原型 v1.3（纯静态，双击 index.html 或 python -m http.server）
+   ├─ index.html       # 骨架；vocab → banks → mock-data → store → ui → sound → compass → draw → views → app
+   ├─ css/app.css      # 全部样式；调色板集中在 #kc-root 变量块（EVA-02 暗色主题 + Hallmark audit 修复）
+   ├─ js\
+│   ├─ vocab.js     # ★ Markdown 词库解析器（受控格式；parseVocabMarkdown / countByLevel / VOCAB_LEVELS）
+│   ├─ banks.js     # ★ 四库 Markdown 共 124 条 + buildBuiltinVocabs 注册
+│   ├─ mock-data.js # 旧 8 条池数据；当前仅 coin/corr 映射题卡，coin 富数据 + 模板
+   │   ├─ store.js     # ★ 状态树 S + Store 业务动作（词库 CRUD + filterPool/pickDraw + localStorage 持久化）
+   │   ├─ ui.js        # 纯工具：esc / fmtT / tag / st / mockTag / now
+   │   ├─ sound.js     # ★ 抽题音效：ZzFXMicro v1.4.0（MIT）内嵌 + SoundFx 封装（开关/音量/持久化/节流/降级）
+   │   ├─ compass.js   # rAF 抽题罗盘展示层（保留用户现有改动）
+   │   ├─ draw.js      # ★ 减速抽题动画（runDrawCeremony → { cancel }；DRAW_ACTIVE 集中管理）
+   │   ├─ views.js     # 各视图渲染（只读 store/mock，无业务规则）
+   │   └─ app.js       # 入口：render 循环 + 事件委托 + bindFileInputs + beginDraw 编排
+   └─ tests\           # Node 验证脚本（不参与浏览器运行时）
+       ├─ test-vocab.js      # 解析器 13 边界用例 + 30 词全量用例
+       ├─ test-store.js      # 词库层 / 池过滤 / 抽题去重 / 持久化
+       ├─ test-store-2.js    # localStorage 恢复 / 往返
+       ├─ test-sound.js      # 音效降级 / 偏好 / 音量映射
+       └─ test-p0.js         # B01/B02/B03 正向回归 12 组，按实际脚本顺序加载
+```
+
+## 运行方式
+
+- 双击打开 `demo/index.html`，或在 demo 目录 `python -m http.server` 后访问。零构建、零依赖、零网络请求。
+- 用户词库和活动 ID 由 localStorage（键 `kc.vocabs.v1`）持久化；四个内置库从代码重建。异常恢复进入写保护、保留原缓存，已恢复词库可浏览；缓存需先备份后由维护者处理，不能自动覆盖。写失败回滚并提示。活动抽题 / 倒计时 / 草稿 / 作品 / 复盘历史仍在内存，刷新后重置。
+
+## 模块职责与关键设计
+
+| 模块 | 职责 | 关键约定 |
+| --- | --- | --- |
+| `vocab.js` | 受控 Markdown 解析：`#` 一级标题=词库名（仅一次）；`##` 仅限「入门/基础/进阶」；`- ` 列表项=词条；同词库查重；错误带行号 | 解析规则如需扩展（更多难度档）改 `VOCAB_LEVELS` 并同步后端协议；保留为前端校验层 |
+| `store.js` | 唯一状态树 `S` + 全部业务动作；词库层（默认 + 导入）；候选池过滤；抽题（先定结果） | `S.ch.locked` 格式为 `vocabId:termId`；词库数据经 `persistVocabs/loadVocabsFromStorage` 读写 localStorage |
+| `draw.js` | 单卡片减速抽题、16 次切换累计约 4.95s、正常锁定另等 420ms | 结果先定；render 调 cancelAllDraws，但取消仍排完成回调，锁定等待期间登记也有缺口（B05） |
+| `views.js` | HTML 模板、筛选与状态派生展示 | 导入库空字段提示；同题候选按标题筛选而非稳定 ID；转写有效性检查不完整 |
+| `app.js` | render 循环、事件委托（`data-action`）、文件输入绑定、抽题编排 | 每次 render 后 `bindFileInputs()` 重挂 change 监听；file input 读完即 `value=''` 支持重选同文件 |
+
+## 数据结构与存储（v1.3）
+
+```js
+// 词库（默认 + 导入同构；localStorage 持久化，键 kc.vocabs.v1）
+vocab = {
+  id: string,            // __bank_prob__/__bank_c__/__bank_psy__/__bank_phil__；用户库为 vocab_<ts>_<rand>
+  name: string,          // 内置四库名称；导入取 .md 一级标题；默认='概率论'
+  builtin: boolean,      // 默认词库 true（不可删、词条不可单独禁用）
+  importedAt: ISO string,
+  terms: [{
+    id: string,          // 内置=序号+标题哈希，调整顺序会变；不能直接充当稳定知识点身份
+    title: string,       // 词条显示名
+    level: '入门'|'基础'|'进阶',
+    enabled: boolean,    // 仅导入词库可切换
+    richId: 'coin'|null, // 有富演示数据的标记（现阶段仅 coin）
+    original: object?    // 内置 coin/corr 映射 MOCK.pool 题卡，其余内置生成占位字段；导入通常无此字段
+  }]
+}
+// localStorage 值：{ vocabs: [仅用户库（剥离 original）...], activeVocabId: string }
+// 旧 activeVocabId='__default__' 映射至 '__bank_prob__'，内置数据从代码重建
+
+// 抽题锁定
+S.ch.locked = '<vocabId>:<termId>'   // 经 Store.getChItem() 反解为 pool item
+// pool item：{ id, title, domain(=词库名), level, minBudget, vocabId, termId, richId, goals?, prereq?, task?, misconception?, src? }
+
+// 候选池规则：活动词库 ∩ enabled ∩（难度='all' 或等于所选难度）；全部 minBudget=0，预算对所有库均不参与过滤
+```
+
+## 已实现（真实交互）vs Mock（演示数据）
+
+P0 修复后的状态归属：`S.ch.draft` 保存未提交解释/回答/修正，`scriptMd` 保存脚本编辑，只有显式提交才更新 submitted 字段；`S.vocabStorage` 记录 blocked/error。`S.rv.segs` 是当前草稿；首次修改确认稿令 version+1、confirmed=0；`transcriptVersions` 追加冻结确认快照；`reportVersions` 存对应确认版本的独立 Mock 快照，`reportOn` 选择当前查看报告。保存档案复制历史，草稿/历史均不跨刷新持久化。
+
+| 能力 | 状态 |
+| --- | --- |
+| 导航 / 五屏首页 / 步骤条 | 真实交互 |
+| Markdown 词库导入（预览 / 行号报错 / 查重 / localStorage 持久化 / 删除 / 活动词库切换） | 真实交互 |
+| 难度筛选（全部/入门/基础/进阶）、词条启用切换（仅导入词库）、池预览、空池禁抽 | 真实交互 |
+| 减速抽题动画 | 真实交互；取消仍回调，未达到完整取消保障（B05） |
+| 挑战 9 步状态机（空值拦截、字符计数、同意门禁禁用 AI、跳过记证据缺口、脚本可编辑标记） | 状态机真实；内容见下 |
+| 学习阶段倒计时（3/5/10 分钟、暂停/继续/重置、离页暂停、时间戳计时） | 本轮新增；状态在 `S.ch.learningTimer`，仅作用于学习步骤；不自动推进；刷新不持久化 |
+| Markdown 词库范例（四库） | 同源 BUILTIN_BANKS；Node 验证复制传参/下载 Blob UTF-8 字节/解析与 Store 导入；真实剪贴板、落盘下载和文件选择导回本轮未验 |
+| 复盘 4 步 | 转写/报告为 Mock；编辑立即撤销确认，确认快照冻结、历史报告保持绑定，未确认不能生成/保存当前报告；历史可查看；全部内存态 |
+| 档案 | 内存交互，刷新丢失；关联只按标题，缺稳定知识点 ID；Markdown 仅文本展示/复制；媒体删除只是布尔标记 |
+| AI 追问 / 反馈 / 修正复核 / 科普脚本 | **Mock**：coin 用 docs/03 协议示例富数据（MOCK.chCoin）；其余全部 MOCK.tmpl 模板，标 Demo Mock |
+| 四库题卡来源、ffprobe/FFmpeg/ASR、媒体信息、复盘报告 | **Mock**；124 条名词可真实解析，但不是 124 个审核知识卡 |
+
+## 测试记录（保留历史，当前以末尾核对结果为准）
+
+以下旧记录对应当时版本，不可当作当前基线或本轮复验；尤其“全量 30 词”“用户库禁用”“不可变版本”“全部取消”需以本轮证据纠正。
+
+- `node --check`：js/ 全部 7 个文件语法通过（每次改动后复跑）。
+- 解析器（tests/test-vocab.js）：13 个边界用例（空输入、无 H1、非法难度档、重复词条、词条先于 H1、无 H2、空列表项、双 H1、尾随空白、CRLF 等）+ 30 词全量用例，全部符合预期。
+- store 层（tests/test-store.js / test-store-2.js）：默认词库 3/3/2 分档；池过滤（全 8 / 入门 3）；导入 → 切换 → 锁定 `vocabId:termId` 反解；词条禁用 → 池收缩；`pickDraw(excludeId)` 去重 8/8；localStorage 写入与恢复往返、活动 ID 回退默认。
+- 抽题时长：60→400ms × 16 步 ease-out 三次 = **4949ms**（在 3–5s 目标区间）。
+- Hallmark audit 修复核验：16 项自动检查全 PASS（色条/死样式/eyebrow/回弹/离册色值/光晕清除；新 token/subpanel/principle/mark/tabular-nums 存在）；CSS 花括号 141/141 平衡。
+- HTTP 资源探测：`python -m http.server` 下 index.html 与全部静态资源 200。
+- **未执行**：真实浏览器逐宽度（320/375/414/768）实测；同知识点正例关联/解除（低风险内存操作，逻辑已两次走查）。
+- 2026-10-14 本轮：Node v24.18.0 下 7 个 JS `--check` 通过；`test-vocab.js` 与标准范例解析断言通过；`test-store.js` 新增倒计时状态/时间戳边界断言通过。`test-store-2.js` 本次执行仍因第 74 行 `require.resolve('js/store.js')` 找不到模块而失败，尚未改动该既有测试脚本。
+- 2026-10-16 第 7 次：`test-store-2.js` 路径 bug 已修（`../js/store.js`），三测试适配 banks.js 后全过（内置三库解析/计数 8–12/ID 稳定；store 4 内置词库注册；localStorage 往返 + 非法难度档过滤）。浏览器实测（http.server 127.0.0.1）：见更新记录第 7 次行。**此前遗留的浏览器验证项**（范例复制/下载按钮存在与点击、375px 无溢出）本轮已覆盖通过；倒计时切页暂停/失焦时间戳/快速连点、320/414/768 宽度仍未实测。
+- 本轮尝试浏览器验证时，浏览器策略拒绝 `file://` 本地页面，并禁止通过替代路径绕过；因此 UI 点击、复制剪贴板、实际下载文件、375px 布局、切页/失焦计时行为尚未做浏览器验证。范例内容通过当前解析器单测，不等同于已验证下载文件的浏览器导入。
+
+### 2026-10-16 Codex 本轮实际执行
+
+- Node v24.18.0；8 个运行 JS `node --check` 通过；demo 目录三个既有测试均 exit 0，之前 test-store-2 路径错误已修，不再列为待修。
+- 现有 test-store 的 `[1]` 已指向内置 C 库，禁用操作未生效但无断言；test-vocab 13 个边界样例多数仅打印，“30 词”夹具实际 29。不能声称所有核心规则测试通过。
+- 项目根目录 `node docs/audits/check-2026-10-16.cjs`：14 组隔离诊断执行完成（5 组正常路径、9 组确认问题/限制）。四库分档/池/抽题锁定、正常缓存迁移保留用户与禁用标志、计时生命周期、范例复制传参和下载 Blob UTF-8 字节导回解析/Store 通过；OBSERVED 项确认 B01–B09/B11 等缺陷，**不是修复通过**。
+- PATH 中发现 Node 和 py 启动器；`py --list-paths` 显示无已注册 Python，PATH 未发现 ffmpeg/ffprobe。未检查其他安装路径；无真实依赖/媒体/API/数据库验收。
+- 未重跑浏览器测试；历史浏览器声明保留但未见独立证据附件。本轮只用隔离内存，不接触真实 localStorage，未安装依赖/模型或付费调用。
+
+## 已知问题与限制
+
+### 2026-10-16 P0 修复实际验证
+
+- Windows PowerShell / Node v24.18.0；10 个运行 JS 语法通过；demo/tests 五个 test-*.js 均 exit 0。
+- 新增 `node demo/tests/test-p0.js`（项目根目录）12 组通过：坏缓存/读写失败、回滚/预览重试、正常旧库重载、特殊字符草稿/脚本/示例跨渲染、新挑战清空、确认快照/编辑立即失效/全空门禁/历史报告/新旧档案、同意门禁、计时单实例与切页暂停。
+- test-store 已修正用户库定位，并新增禁用和候选池断言；test-vocab 的部分旧检查仍只是打印，不能称全套规则已验收。修复前 OBSERVED 脚本保留历史，不再作为当前回归入口。
+- 未做真实浏览器、布局、剪贴板或真实 localStorage 故障测试；未做 D0/真实 API/ASR/数据库。没有安装依赖/下载模型/付费请求。
+
+1. （已解决，2026-10-16）默认词库难度分档硬编码 → 概率论词库改为 Markdown 三级结构。
+2. 导入词库仅含词库名与词条标题，无学习目标/前置/任务/来源/误解；题卡对应字段留占位。后端需按知识点 ID 关联补齐。
+3. （已解决，2026-10-16）档案「领域」筛选下拉写死 → 改为从词库列表动态生成。
+4. 学习时间预算对所有内置/导入库均不参与过滤，池项 minBudget=0；不是“仅默认库有语义”。
+5. 未在真实浏览器做 320/414/768 逐宽度实测（375 已测通过）；「写死难度档若扩展需同步 vocab.js 与后端协议」。
+6. `MOCK.pool` 中 3 条 AI 词条（hallu/embedding/overfit）自概率论重构后不再进入任何词库，保留在文件中供 coin 流程与模板复用；Codex 接入时可清理。
+7. 倒计时「失焦时间戳准确性、快速连续点击」等边界仅 node 断言，未做浏览器实测。
+8. B01–B03 本轮已修并通过 Node 回归，浏览器复验仍待做。原审查报告保留修复前证据，不将其旧结论当当前未修状态。
+
+## 待用户决策（阻塞编码，见 docs/00 §5）
+
+| 决策 | 状态 | 备注 |
+| --- | --- | --- |
+| DEC-01 P0 范围 | ⏳ 待批准 | 建议同时预授权 32h 压缩档（题库 6–8 卡） |
+| DEC-02 单机单用户 | ⏳ 待确认 | 建议按基线通过 |
+| DEC-03 知识领域 | ⏳ 待确认 | 概率统计 + AI 基础，先审核少量来源 |
+| DEC-04 模型服务商/预算 | ⏳ 待确认 | 建议 10-15 前定，阻塞真实 API 不阻塞 T01–T03 |
+| DEC-05 设备条件 | ⏳ 待实测 | 由 T01（D0）回答 |
+| DEC-06 媒体边界 | ⏳ 待确认 | 100 MiB / 300 秒 / 普通话 |
+| DEC-07 留存方式 | ⏳ 待确认 | 媒体仅本地、可单独清理 |
+| DEC-08 赛道与报名 | ⏳ 用户行动项 | 单人参赛资格需向官方群确认；尽早报名 |
+| DEC-10 开源许可 | ⏳ 待确认 | 建议 MIT；阻塞公开发布不阻塞开发 |
+
+## 下一步（建议顺序）
+
+1. 已完成获批的 P0 数据/版本修复；建议下一轮先浏览器复验，再由用户决定是否授权 D0 和剩余 P1。确认是否采用保留前端 + FastAPI + SQLite 替代旧 Streamlit 方案；现有 Demo 授权不代表整体 PRD/后端已批准，不得代改 DEC 状态。
+2. D0 前确认模型服务/预算/外发、目标设备/安装与模型下载、授权样片/媒体边界及留存；获批后真实 API 与 ASR 各做最小技术验证，再以实际工时重排。建议少量 6–8 张审核知识卡，不把 124 条名词池当来源审核完成。
+3. 与官方渠道核对：正式赛题、单人资格、报名精确截止、提交入口与格式要求。
+4. Codex 接入边界（★ 标记文件的替换清单，见 store.js 末尾注释）：
+   - `mock-data.js` → API 适配器；
+   - `Store.filterPool / getChItem / importVocab / deleteVocab / toggleTerm` → 异步 API 调用；
+   - `persistVocabs / loadVocabsFromStorage`（localStorage）→ **SQLite**；
+   - `vocab.js` 保留为前端校验层，解析规则与后端协议同步；
+   - 布局可复用；views/app/draw 仍须适配异步/错误/版本/草稿生命周期，不是只换 MOCK 即完成。
+5. 已实施项（勿重复排期）：减速抽题（第 4 次）、词库导入与持久化（第 4 次）、EVA 主题 + 白边修复（第 5 次）、Hallmark audit 全项修复（第 6 次）。
+6. 暂停新增词库与 UI 美化；领域下拉已动态化，但历史库删除后选项保留存在 B12。窄屏真机、同知识点关联正例与取消交错、真实媒体播放仍待验。
+7. test-store 导入目标和必要禁用断言、P0 正向回归已完成；后续浏览器复验缓存失败提示/编辑导航/新旧稿和报告，继续倒计时/失焦/快点、范例复制/落盘下载再导入、375px 等。test-store-2 旧路径错误已修，无需重复处理。新证据见 P0 修复记录。
+
+## 重要约定（沿用 docs/00）
+
+- 权威顺序：用户本次明确需求 > 已记录审核结论 > 本套文档；AI 不得把「建议」自动升级为「已确定」。
+- 演示原型、文档存放、报名动作均不等于批准应用编码。
+- 每次会话结束更新本交接文档，且文档必须与实际代码一致——不得把计划功能描述为已实现。
+- **Markdown 词库格式受限于 demo 版本**：二级标题限定「入门 / 基础 / 进阶」；扩展难度档需改 `js/vocab.js` 的 `VOCAB_LEVELS` 并同步后端协议。
+- 视觉主题变更需同步 `demo/README.md`「视觉主题」小节与本文档更新记录。
+
+## 独立视觉试验记录
+
+| 日期 | 试验 | 状态 |
+| --- | --- | --- |
+| 2026-10-17 | **炼知火焰罗盘独立 Demo**（`prototypes/flame-compass/`，4 文件自包含）：三态火焰罗盘（待机微燃/抽题升腾/锁定回落，参考用户三态示意图），方案 A=SVG 柔和火焰（推荐集成）、方案 B=轻量粒子（上限 90），控制面板含强度/速度/动效开关，状态机与抽题节奏复刻正式 demo 但不连接 Store。IAB 内核实测三态联动/控件/重复点击/重置/375px 通过；真实 rAF 观感与美学待人工审阅。**未集成正式前端**；正式 `demo/` 18 个文件 SHA-1 逐一比对（试验前后）零改动。下一步：等用户审阅 Demo 后再讨论是否集成及选型。 |
