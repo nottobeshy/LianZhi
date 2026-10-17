@@ -40,6 +40,14 @@ function runDrawCeremony(opts) {
   let finished = false;
   let live = true;
   let onDoneTimer = 0;
+  let settled = false;
+  function complete(reason) {
+    if (settled) return;
+    settled = true;
+    if (onDoneTimer) clearTimeout(onDoneTimer);
+    DRAW_ACTIVE.delete(controller);
+    if (onDone) onDone(reason);
+  }
 
   function lockDisplay() {
     termEl.textContent = candidates[winnerIdx].title;
@@ -58,17 +66,16 @@ function runDrawCeremony(opts) {
     timers.length = 0;
     if (onDoneTimer) { clearTimeout(onDoneTimer); onDoneTimer = 0; }
     stage.removeEventListener('click', onSkip);
-    DRAW_ACTIVE.delete(controller);
-    lockDisplay();
+    if (reason !== 'cancel') lockDisplay();
     if (reason !== 'cancel' && onLock) onLock(reason);
     if (reason === 'cancel') {
       /* 页面离开：同步收敛状态，不渲染、不延迟 */
-      if (onDone) onDone(reason);
+      complete(reason);
       return;
     }
     const instant = reason === 'skip' || reason === 'fallback';
     const delay = (reduced || instant) ? 0 : DRAW_LOCK_DELAY;
-    onDoneTimer = setTimeout(() => { if (onDone) onDone(reason); }, delay);
+    onDoneTimer = setTimeout(() => complete(reason), delay);
   }
 
   function onSkip() {
@@ -79,6 +86,7 @@ function runDrawCeremony(opts) {
   const controller = { cancel: () => {
     if (onDoneTimer) { clearTimeout(onDoneTimer); onDoneTimer = 0; }
     if (!finished) finish('cancel');
+    else complete('cancel');
   } };
   DRAW_ACTIVE.add(controller);
 

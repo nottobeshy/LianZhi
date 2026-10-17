@@ -1,3 +1,4 @@
+> 2026-10-17 工程更新：正式入口改为根目录 README 所述 `python -m backend`，同源 FastAPI 托管。HTTP模式挑战仅实现解释→追问→回答→自主修正→SQLite保存；AI反馈/复核/脚本和视频复盘仍是Mock。file://保留静态Mock；普通http.server不提供API。以下旧“无Python应用”及启动说明是历史原型记录。词库仍在localStorage，挑战记录保存SQLite；内置knowledgeId由topic-ids.js稳定UUID维护，旧序号term.id仍供抽题使用。已做1次真实模型/SQLite/重启读回验证；浏览器本轮未验证；详见根README/HANDOFF。
 # 演示原型（demo/）
 
 **这是静态前端交互原型，尚无真实 Python 应用，不构成整体 PRD 或后端编码批准。** DEC-01～07 的待确认状态不因原型迭代自动改变。2026-10-16 检查结果与缺陷见 [基线报告](../docs/audits/2026-10-16-项目基线与增量质量检查.md)。

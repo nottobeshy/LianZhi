@@ -1,66 +1,71 @@
-# 选题罗盘 · Knowledge Compass
+# 炼知 · LianZhi
 
-> 让独立解释、反向追问和作品复盘留下可追溯的学习记录。
+思考在前，AI 在后。原项目名：选题罗盘（Knowledge Compass）。单机知识创作工作流，保留知识挑战和视频复盘两个独立入口。
 
-面向希望通过科普视频深化学习、积累作品资产的大学生。产品只有两个核心模式：**知识挑战**与**视频复盘**，共享“我的知识作品”档案。
+## 当前状态（2026-10-17）
 
-**当前状态（2026-10-16）：已有原生 HTML/CSS/JavaScript 静态交互 Demo；真实应用尚未实现，整体 PRD 与后端方案仍待用户明确批准。** 前端原型的单独迭代授权不代表全部 P0 已获批准。AI、媒体处理与复盘报告仍为 Mock，作品记录仍在内存。
+范围来自 [MVP正式任务书](docs/MVP_TASK_V1.0.md)，不代表旧PRD全部获批。
 
-当前基线、缺陷证据与下一阶段门槛见 [10-16 质量检查报告](docs/audits/2026-10-16-项目基线与增量质量检查.md)，原型说明见 [demo/README](demo/README.md)，会话历史见 [HANDOFF](HANDOFF.md)。
-
-基线检查后已按用户授权修复 B01/B02/B03：异常缓存防覆盖和写失败回滚、重渲染保留编辑、转写确认快照与报告失效。详见 [P0 修复与验证记录](docs/audits/2026-10-16-P0修复记录.md)。这些结果为 Node 回归验证，真实浏览器尚未复验。
-
-## 文档导航
-
-| 文档 | 内容 |
+| 能力 | 实际状态 |
 | --- | --- |
-| [00 · 文档约定与决策](docs/00-文档约定与决策.md) | 已确定/建议基线、全部需求编号、待确认决策、参数 |
-| [01 · 产品需求文档 PRD](docs/01-产品需求文档PRD.md) | 定位、场景、信息架构、两个模式完整交互、优先级和业务规则 |
-| [02 · 技术方案与运行安全](docs/02-技术方案与运行安全.md) | 精简单机架构、依赖、运行环境、错误处理、安全与隐私 |
-| [03 · 数据模型与 AI 协议](docs/03-数据模型与AI协议.md) | 字段、关系、状态、版本、结构化输入输出与有效性约束 |
-| [04 · 验收与测试计划](docs/04-验收与测试计划.md) | 逐项可测试标准、异常与空数据、失败回退和测试记录方式 |
-| [05 · 开发任务与赛事演示](docs/05-开发任务与赛事演示.md) | 任务依赖、工时、时间表、测试阶段、三分钟演示和提交清单 |
-| [AI 编程协作约束](AGENTS.md) | 后续编程工具的阅读顺序、审批门槛和范围限制 |
+| 四词库、导入、抽题、倒计时 | 已实现；Node回归通过；本轮浏览器未验证 |
+| FastAPI同源托管前端 | 实际本机HTTP测试通过 |
+| 解释→追问→回答→修正→SQLite→重启读取 | Stub模式的实际HTTP与前端脚本测试通过；内存DOM，非浏览器测试 |
+| DeepSeek | 适配器已实现；协议/失败测试用MockTransport；已通过1次真实DeepSeek请求、回答修正保存及实际进程重启读回；浏览器全流程未验收 |
+| 无Key案例 | 明确标记example的预存协议夹具，不是历史真实调用 |
+| 视频复盘、AI反馈/复核/讲稿 | 原Demo Mock；未接真实服务/媒体/SQLite |
+| ASR | 只有接口类型，未安装引擎或模型 |
 
-建议审核顺序：先看 00 的决策清单，再看 01 的流程和范围，随后检查 04 的交付标准；实现时以 02、03、05 指导拆分。
+无Key可以学习、保存解释、查看档案和预存案例；真实追问报未配置，不自动替换Mock。主动选择mock才使用开发Stub。
 
-## 真实应用的原设计提议（尚未落地）
+## Windows快速启动
 
-- Windows 本机单用户，Python + Streamlit + SQLite；FFmpeg 与开源 ASR 在本地处理视频。
-- 小型人工审核题库，知识挑战每次一轮 1–3 个追问。
-- 视频建议限制为 100 MiB、5 分钟，先核对转写再分析；复盘仅覆盖文字呈现的知识、逻辑与表达。
-- 三类判断明确分开：可验证事实、合理推断、待核实判断。模型评价不替代事实核查，完成视频不代表掌握知识。
-- 分镜、字幕导入导出、备份恢复先放在 P1；公开作品托管、多用户、画面分析不属于 MVP。
+实际环境：Windows 11 x64、Python **3.12.14**、SQLite **3.53.1**、Node **24.18.0**。其他系统/版本未验证。需安装Python 3.12；开发机本轮使用应用附带Python，系统py无注册解释器。
 
-以上实现参数均为**建议基线**，尚未经用户确认；不能在对外介绍中写成已交付能力。
-
-当前另在评估保留 Demo 前端、增加 **FastAPI + SQLite** 的单机方案；与 docs/02 的旧 Streamlit 方案存在待决差异，尚未批准或实现。真实 API、FFmpeg/ASR、数据库和双体验入口均不能算作当前能力。
-
-## 本地目录
-
-目标目录为 `E:\Projects\KnowledgeCompass`。可直接打开 `demo/index.html` 查看静态原型，无需 Python 或 API Key；这不执行真实转写或 AI 调用。当前四库共 124 条：概率论 30、C 语言 34、心理学 30、哲学 30。内置库从代码重建，仅用户导入库与活动库 ID 存在 localStorage；倒计时、挑战、复盘和作品刷新后重置。
-
-当前回归：项目根目录执行 `node demo/tests/test-p0.js`（12 组）；在 `demo/` 执行 `node tests/test-vocab.js`、`node tests/test-store.js`、`node tests/test-store-2.js`、`node tests/test-sound.js`。本轮五个脚本均 exit 0，10 个运行 JS 语法检查通过；导入测试对象选错已修，其他部分仍仅打印，不代表产品全部验收通过。`docs/audits/check-2026-10-16.cjs` 是修复前 OBSERVED 诊断资料，不再作为当前回归入口。
-
-尚无 Python 应用入口、依赖锁定、SQLite、环境变量模板或真实媒体样例；当前不能按真实应用安装运行。环境探测只发现 Node v24.18.0 与 py 启动器（未注册 Python），PATH 未找到 FFmpeg/ffprobe；其他目录安装情况未查，不把 PATH 结果等同整机无安装。
-
-计划中的私有媒体、数据库、模型缓存和密钥不进入 Git。提交源码前再创建相应忽略规则和安装说明；无需把原赛事文件提交到公开仓库。
-
-## 赛事依据与时限
-
-已读取并核对上传的 5 页《人工智能创新应用黑客松参赛流程指引》，文件名 `参赛选手流程指引(3)(1).pdf`，SHA-256：
-
-```text
-7C7AEEC2AD9F36212C678FF5F077AD060659431DD54579399D9B17CAC86C1BC6
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m backend
 ```
 
-指引计划为 **2026-10-22 17:00（UTC+8）前**提交代码仓库或可运行 Demo 链接及汇报 PPT。报名日期、资格、赛题、地点和评分细则以正式公告为准。[赛事官网](https://wuhan.uoyc.com/1024/)在本次工具读取中不可访问，本套文档没有将指引当成已经实时核实的最终规则。原始同步文件保持只读。
+打开 **http://127.0.0.1:8000**；接口文档 **http://127.0.0.1:8000/docs**；Ctrl+C停止。单worker，仅绑定本机。无需前端构建、FFmpeg、ASR模型或GPU。
 
-## 审核记录
+数据默认 %LOCALAPPDATA%\KnowledgeCompass，自动初始化app.db；启动前可设置 `$env:LIANZHI_DATA_DIR='可写目录'`。同目录只允许运行一个服务。备份先停服务再复制数据目录，不要用删除数据库解决错误。
 
-| 日期 | 版本 | 状态 | 说明 |
-| --- | --- | --- | --- |
-| 2026-10-13 | v0.1 | 待审核 | 首版完整需求与开发前准备；不构成编码授权 |
-| 2026-10-16 | 基线核对 | 事实同步 | 记录实际静态 Demo、未实现真实链路、Node 检查局限与架构待决差异；不改变 PRD/DEC 状态 |
+## 模型配置
 
-下一步由项目负责人审核 P0 范围、运行场景、首批领域、媒体限制、数据留存和模型服务/预算。审核结论按 DEC 编号记录到 00，随后才能排定开发任务。
+应用“设置”填写endpoint、模型和密码框Key，再应用配置。Key只在后端进程内存，重启重填，不回显、不进SQLite/localStorage。留空保留当前Key，清除按钮移除内存Key。
+
+用户确认：`https://api.deepseek.com`、`deepseek-v4-pro`、**最多3次真实请求**。额度按进程计数；重启归零不代表新的收费授权，不得跨进程累计超过授权额度。
+
+环境变量见 [.env.example](.env.example)。**程序不会自动加载.env**，需在服务终端设置变量。不要把Key写入聊天、源码、普通日志或Git。
+
+live必须先独立解释、在设置勾选文字外发同意，再明确点击生成追问。只发知识点/解释，不发送媒体。模型意见不是事实核查；无自动重试，超时仍可能计费。网络失败保留错误和输入，本地保存仍可用。
+
+开发验证可启动前设置 `$env:LLM_MODE='mock'`；结果标注mock/开发Stub，正常使用保持live。
+
+## 测试
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+Push-Location demo
+Get-ChildItem tests/test-*.js | ForEach-Object { node $_.FullName; if ($LASTEXITCODE -ne 0) { throw $_.Name } }
+Pop-Location
+```
+
+测试用临时目录和Stub/MockTransport，不收费。pytest含真实HTTP进程、Node前端适配层、服务重启验证。旧Node部分用例仅打印诊断，不等于全部规则验收。
+浏览器自动化本轮因Windows sandbox helper初始化错误失败；交互/布局/剪贴板/下载和真实localStorage故障未验证。
+
+## 工程与文档
+
+- demo/：原生前端，api.js访问同源/api；file://仍为静态Mock。不要用python -m http.server代替正式服务。
+- backend/：FastAPI、sqlite3、模型适配、未来ASR接口；无ORM/队列/账号。
+- tests/：API、存储、错误、实际进程测试。
+- scripts/sync-topics.cjs：维护124个内置UUID；改词库后执行 `node scripts/sync-topics.cjs` 并审核生成文件，勿重建已有UUID。
+- [架构/API](docs/ARCHITECTURE.md) · [复现](docs/REPRODUCE.md) · [演示](docs/DEMO.md) · [第三方](docs/THIRD_PARTY.md)
+- [决策](docs/00-文档约定与决策.md) · [PRD](docs/01-产品需求文档PRD.md) · [约束](AGENTS.md) · [交接](HANDOFF.md)
+
+## 限制
+
+活动草稿/计时/Mock视频记录在内存；导入词库在浏览器localStorage，未迁SQLite。本轮SQLite只保存挑战闭环，列表最多最近500条。解释不可覆盖，修正追加；schema v1仅初始化与新版本拒绝，未来破坏性迁移另行设计。已保存解释可查阅，尚无中途记录恢复编辑入口。
+真实AI已做1次成功验证，累计费用额度最多3次；ASR/FFmpeg、真实视频、其他硬件未验收。未打包桌面程序；整体开源许可待决定，未创建GitHub远程仓库或发布。

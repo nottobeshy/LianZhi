@@ -198,7 +198,7 @@ function buildBuiltinVocabs() {
       importedAt: new Date(0).toISOString(),
       exampleKey: bank.exampleKey,
       terms: parsed.terms.map(t => {
-        const term = { id: t.id, title: t.title, level: t.level, enabled: true, richId: null, original: null };
+        const term = { id: t.id, knowledgeId: BUILTIN_TOPIC_IDS[bank.id][t.title], title: t.title, level: t.level, enabled: true, richId: null, original: null };
         const poolId = RICH_POOL_TERMS[t.title];
         const src = poolId && typeof MOCK !== 'undefined' ? MOCK.pool.find(p => p.id === poolId) : null;
         if (src) {

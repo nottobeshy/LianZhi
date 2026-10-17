@@ -33,6 +33,7 @@ const freshCh = () => ({
   scriptEdited: false,
   saved: false,
   draft: { explanation: null, answer: null, revision: null },
+  remote: null, remoteAnswers: Object.create(null), commandIds: {}, busy: false, error: '',
   learningTimer: { minutes: 5, remainingMs: 5 * 60 * 1000, endsAt: null, state: 'ready', generation: 0 }
 });
 
@@ -57,7 +58,8 @@ const S = {
   vocabStorage: { blocked: false, error: '' },
   activeVocabId: DEFAULT_VOCAB_ID,
   vocabImport: freshVocabImport(),
-  vocabExampleKey: 'c'
+  vocabExampleKey: 'c',
+  backend: {ready:false,error:'',busy:false,llm:null,examples:[],showExamples:false}
 };
 
 /* ---------- localStorage 持久化：仅用户导入词库 + 活动词库 ID ----------
@@ -300,6 +302,7 @@ const Store = {
       minBudget: 0,
       vocabId: vocab.id,
       termId: term.id,
+      knowledgeId: term.knowledgeId || 'user:' + vocab.id + ':' + term.id,
       richId: term.richId || null
     };
     if (term.original) {
@@ -357,7 +360,8 @@ const Store = {
       status: '脚本已就绪 · 挑战完成', open: 1, rich: it.richId === 'coin',
       exp: S.ch.explained, rev: S.ch.rev, skipped: S.ch.skipped,
       scriptTitle: mk.script.title, md: S.ch.scriptEdited ? S.ch.scriptMd : null,
-      vocabId: it.vocabId
+      vocabId: it.vocabId,
+      knowledgeId: it.knowledgeId
     });
   },
 
@@ -367,6 +371,7 @@ const Store = {
     S.works.push({
       type: 'review', id: 'w' + (++seq), title: '硬币口播演示视频（20 秒）',
       kp: MOCK.pool[0].title, domain: '概率论',
+      knowledgeId: BUILTIN_TOPIC_IDS['__bank_prob__'][MOCK.pool[0].title],
       updated: new Date().toLocaleString('zh-CN', { hour12: false }),
       status: '复盘已保存 · 视频已归档', open: 1,
       segs: S.rv.segs.map(s => ({ ...s })), version: S.rv.confirmed, reportOn: S.rv.reportOn,

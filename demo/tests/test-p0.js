@@ -13,7 +13,7 @@ const user = { id: 'user_keep', name: '保留库', builtin: false, terms: [
 ] };
 const rawUser = () => JSON.stringify({ activeVocabId: user.id, vocabs: [user] });
 
-function boot(raw = null) {
+function boot(raw = null, globals = {}) {
   let clock = 1000, seq = 0, html = '';
   const tasks = new Map(), nodes = new Map(), listeners = {};
   const storage = { data: { [key]: raw }, writes: 0, failWrite: false, failRead: false,
@@ -21,7 +21,7 @@ function boot(raw = null) {
     setItem(k, v) { if (this.failWrite) throw Error('QuotaExceededError'); this.writes++; this.data[k] = String(v); }
   };
   const element = () => ({ id: '', dataset: {}, style: {}, disabled: false, textContent: '', value: '', isConnected: true,
-    classList: { add() {}, remove() {} }, querySelector() { return null; }, addEventListener() {}, setAttribute() {}, select() {}, click() {}, remove() {} });
+    classList: { add() {}, remove() {} }, querySelector() { return null; }, addEventListener(type,fn) { (this.events ||= {})[type]=fn; }, setAttribute() {}, select() {}, click() {}, remove() {} });
   const decode = s => s.replace(/&(amp|lt|gt|quot|#39);/g, (_, c) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'" })[c]);
   const app = element();
   Object.defineProperty(app, 'innerHTML', { get() { return html; }, set(v) {
@@ -45,6 +45,7 @@ function boot(raw = null) {
     setInterval: (f, d) => schedule(f, d, true), clearInterval: id => tasks.delete(id),
     requestAnimationFrame: f => schedule(() => f(clock), 16), cancelAnimationFrame: id => tasks.delete(id)
   });
+  Object.assign(ctx, globals);
   ctx.window = ctx;
   // 始终沿 index.html 的实际加载顺序，包含现有音效和罗盘展示层。
   const scripts = [...fs.readFileSync(path.join(demo, 'index.html'), 'utf8').matchAll(/<script src="([^"]+)"/g)];
@@ -70,6 +71,8 @@ function boot(raw = null) {
 function challenge(b, step) { b.run(`S.view='challenge';S.ch.locked=Store.filterPool()[0].id;S.ch.step=${step};render()`); }
 function review(b) { b.run(`S.view='review';S.consent.review=true;S.rv.segs=MOCK.segs.map(s=>({...s}));S.rv.step=2;render()`); }
 function roundTrip(b, view) { b.click('nav', { view: 'settings' }); b.click('nav', { view }); }
+module.exports = { boot, challenge, review, roundTrip };
+if (require.main === module) {
 let count = 0;
 function check(name, fn) { fn(); console.log('PASS ' + name); count++; }
 
@@ -184,3 +187,4 @@ check('timer remains single-instance and pauses across navigation after draft ch
   b.click('ch:timer-start'); b.advance(remaining); assert.equal(b.run('S.ch.learningTimer.state'), 'finished'); assert.equal(b.run('S.ch.step'), 2);
 });
 console.log(count + ' P0 regression groups passed (Node; browser not exercised).');
+}

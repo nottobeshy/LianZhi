@@ -14,6 +14,7 @@ const vcode = require('fs').readFileSync('js/vocab.js', 'utf8');
 (0, eval)(vcode.replace('window.VocabParser', 'globalThis.VocabParser'));
 
 // Load banks.js（内置词库，store.js 注册时依赖）
+(0, eval)(require('fs').readFileSync('js/topic-ids.js','utf8').replace('const BUILTIN_TOPIC_IDS','globalThis.BUILTIN_TOPIC_IDS'));
 (0, eval)(require('fs').readFileSync('js/banks.js', 'utf8').replace('const BUILTIN_BANKS', 'globalThis.BUILTIN_BANKS').replace('function buildBuiltinVocabs', 'globalThis.buildBuiltinVocabs = function').replace('function getBankExample', 'globalThis.getBankExample = function'));
 
 // Load mock-data.js

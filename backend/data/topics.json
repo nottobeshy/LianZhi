@@ -1,0 +1,870 @@
+[
+  {
+    "id": "08f5a509-274c-482e-8504-f7d7c4458b21",
+    "vocab_id": "__bank_prob__",
+    "title": "样本空间",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "3515303f-c0e1-4ffe-9611-9cea6fb3696b",
+    "vocab_id": "__bank_prob__",
+    "title": "独立事件",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "1154dc75-9919-4428-96e2-247ebb008c10",
+    "vocab_id": "__bank_prob__",
+    "title": "期望值",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "8a9b15ca-29ee-4ec1-96d1-fb9e470e9142",
+    "vocab_id": "__bank_prob__",
+    "title": "大数定律",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "cfdd2019-c27b-4129-b9f6-1afacb1d432f",
+    "vocab_id": "__bank_prob__",
+    "title": "赌徒谬误",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "f818018a-dcc1-4a22-a6b2-dd5a904d5ff5",
+    "vocab_id": "__bank_prob__",
+    "title": "小数定律",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "25125c5c-7c45-497b-9d24-06a03aa26dca",
+    "vocab_id": "__bank_prob__",
+    "title": "生日悖论",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "3d6aa1fe-bfc6-45f9-b95f-7aee99542fb5",
+    "vocab_id": "__bank_prob__",
+    "title": "相关不等于因果",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "4a67193a-3841-45a1-ab80-fab1bef85968",
+    "vocab_id": "__bank_prob__",
+    "title": "幸存者偏差",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "e46c75ec-546a-4874-8c03-a600b834f95f",
+    "vocab_id": "__bank_prob__",
+    "title": "两次抛硬币，至少一次正面的概率",
+    "domain": "概率论",
+    "level": "入门"
+  },
+  {
+    "id": "229aca21-25e7-43bf-a1b2-7f79fe8fe2af",
+    "vocab_id": "__bank_prob__",
+    "title": "条件概率",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "f942032a-0b1a-4f75-a37b-51b95d311a82",
+    "vocab_id": "__bank_prob__",
+    "title": "贝叶斯定理",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "094de9f6-9d3c-48ee-a451-e2c4aaf58a70",
+    "vocab_id": "__bank_prob__",
+    "title": "蒙提霍尔问题",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "e3253c72-4ef5-4caf-9d60-ecf3a71f4c99",
+    "vocab_id": "__bank_prob__",
+    "title": "基础比率谬误",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "16b1109c-6813-492b-aafa-27b6859332f3",
+    "vocab_id": "__bank_prob__",
+    "title": "伯努利试验",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "7768161d-5f99-4c2f-ac82-60a82f776e26",
+    "vocab_id": "__bank_prob__",
+    "title": "二项分布",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "c09c11c4-aecb-45af-9504-30a307025e3c",
+    "vocab_id": "__bank_prob__",
+    "title": "正态分布",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "70749957-d3a5-4669-b8fc-5025b67f009f",
+    "vocab_id": "__bank_prob__",
+    "title": "随机游走",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "47261222-c752-43f7-9830-6f3e1e907316",
+    "vocab_id": "__bank_prob__",
+    "title": "p 值",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "d56a640d-e3fe-4975-aecf-6ff6670c889d",
+    "vocab_id": "__bank_prob__",
+    "title": "置信区间",
+    "domain": "概率论",
+    "level": "基础"
+  },
+  {
+    "id": "c6568a2f-0073-4b4c-8058-a120b92d6e95",
+    "vocab_id": "__bank_prob__",
+    "title": "中心极限定理",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "eb4f8436-383e-4466-970c-b663164893b3",
+    "vocab_id": "__bank_prob__",
+    "title": "辛普森悖论",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "bd905c9d-ef40-4d14-bcf4-e5bfe87d8f26",
+    "vocab_id": "__bank_prob__",
+    "title": "圣彼得堡悖论",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "302e2ca0-60ed-4594-88db-7c2fb0f3c2c1",
+    "vocab_id": "__bank_prob__",
+    "title": "条件期望",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "6d9026bd-df86-4165-821e-23a87cddbc71",
+    "vocab_id": "__bank_prob__",
+    "title": "马尔可夫链",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "7c32bd02-6403-4797-98a4-31cceba9cbc3",
+    "vocab_id": "__bank_prob__",
+    "title": "贝叶斯推断",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "617b3e5d-8e31-4fa6-a777-bcc6ebcf9bab",
+    "vocab_id": "__bank_prob__",
+    "title": "赌徒破产问题",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "0b91ad60-25ee-4d92-b892-7a29dcada66e",
+    "vocab_id": "__bank_prob__",
+    "title": "遍历性",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "9703c399-b575-4e8a-9196-2585fab0f2f5",
+    "vocab_id": "__bank_prob__",
+    "title": "期望效用",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "05ba54f5-c6ed-4a88-983a-8cbfd2ca4312",
+    "vocab_id": "__bank_prob__",
+    "title": "蒙特卡洛方法",
+    "domain": "概率论",
+    "level": "进阶"
+  },
+  {
+    "id": "986d1464-fca5-4cca-855e-854f478ca592",
+    "vocab_id": "__bank_c__",
+    "title": "变量",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "6d5ef6f0-3190-4561-ba79-82e4c0b92485",
+    "vocab_id": "__bank_c__",
+    "title": "常量",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "e5521517-04df-44eb-af1f-c7e7ddeee25b",
+    "vocab_id": "__bank_c__",
+    "title": "数据类型",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "aadf5c88-b111-415c-b74e-657df69ca1ca",
+    "vocab_id": "__bank_c__",
+    "title": "运算符",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "7161f0f5-5066-49da-863a-c367b45f4cdf",
+    "vocab_id": "__bank_c__",
+    "title": "表达式",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "287f3381-6fd4-4fff-bda2-f72b2efda6e7",
+    "vocab_id": "__bank_c__",
+    "title": "类型转换",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "3b0f66c5-7e1d-4fd9-a424-f6280185edbe",
+    "vocab_id": "__bank_c__",
+    "title": "条件语句",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "786f5b15-eaef-436c-bd77-d8c555579717",
+    "vocab_id": "__bank_c__",
+    "title": "循环语句",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "89c4936a-5c8d-4045-ad9a-3b02b67d9fcd",
+    "vocab_id": "__bank_c__",
+    "title": "标准输入输出",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "8e778ecd-20b4-4468-9952-9f607af2157c",
+    "vocab_id": "__bank_c__",
+    "title": "作用域",
+    "domain": "C 语言知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "ad345d89-c80c-4a6e-bbd1-0511a186d75c",
+    "vocab_id": "__bank_c__",
+    "title": "数组",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "3e2185fb-bd20-4491-ba29-fa93827223ec",
+    "vocab_id": "__bank_c__",
+    "title": "二维数组",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "0eafe4e1-5092-4805-9e1c-781ad9ef2371",
+    "vocab_id": "__bank_c__",
+    "title": "字符串",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "94909902-389d-44b2-a8bb-ae862249214a",
+    "vocab_id": "__bank_c__",
+    "title": "空字符",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "caba7f1a-5afe-4818-812b-861d221a2674",
+    "vocab_id": "__bank_c__",
+    "title": "数组越界",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "b4c1f93a-7ec7-4dd4-b45f-3fe8711efaae",
+    "vocab_id": "__bank_c__",
+    "title": "函数",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "55cc1d45-2966-48aa-aba8-4329eadde643",
+    "vocab_id": "__bank_c__",
+    "title": "函数参数传递",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "6866e1e4-1e3f-4e60-b035-46bb1422b34e",
+    "vocab_id": "__bank_c__",
+    "title": "递归",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "4dabef87-2f84-46c0-a35d-b62c29ee7bbb",
+    "vocab_id": "__bank_c__",
+    "title": "指针",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "95e5a50a-2c64-4aca-813e-6ca98e57d527",
+    "vocab_id": "__bank_c__",
+    "title": "指针运算",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "129d0592-8614-41fe-b8c8-998d0e6ad443",
+    "vocab_id": "__bank_c__",
+    "title": "结构体",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "3d16a784-99fc-44e1-97f5-8feeb109cb93",
+    "vocab_id": "__bank_c__",
+    "title": "联合体",
+    "domain": "C 语言知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "5de8a845-bc5f-46d5-a499-1bde6332546d",
+    "vocab_id": "__bank_c__",
+    "title": "数组退化",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "d7d6e696-7c10-4045-9f36-0ef6e15848cc",
+    "vocab_id": "__bank_c__",
+    "title": "函数指针",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "6955839c-6746-4c9a-9110-922fafcf6294",
+    "vocab_id": "__bank_c__",
+    "title": "悬空指针",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "087273ee-36f2-430d-a9ea-a24cf3661e7e",
+    "vocab_id": "__bank_c__",
+    "title": "野指针",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "7f0e00de-54da-447f-a870-07a4073cdd04",
+    "vocab_id": "__bank_c__",
+    "title": "动态内存分配",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "2c6fb160-8c38-4572-aef1-daae23f8806c",
+    "vocab_id": "__bank_c__",
+    "title": "内存泄漏",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "0431360a-aac2-49e9-8426-0621b128e11f",
+    "vocab_id": "__bank_c__",
+    "title": "栈溢出",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "a397e0fe-de11-456e-b52e-de8397b75dbc",
+    "vocab_id": "__bank_c__",
+    "title": "结构体内存对齐",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "33745a12-e2de-4fd0-bef4-1518646c8583",
+    "vocab_id": "__bank_c__",
+    "title": "未定义行为",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "059c4aa2-0ae9-488c-921c-0645788cd698",
+    "vocab_id": "__bank_c__",
+    "title": "链表",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "7aced37a-d39d-4cbc-9686-3e518b1ceb55",
+    "vocab_id": "__bank_c__",
+    "title": "文件操作",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "2d2c225e-496e-4f14-9ded-53a92a3bea3b",
+    "vocab_id": "__bank_c__",
+    "title": "预处理宏",
+    "domain": "C 语言知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "ce80fea3-2393-40a3-ac03-39ee96060cb8",
+    "vocab_id": "__bank_psy__",
+    "title": "巴纳姆效应",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "4b2b808e-810f-4ec0-89a2-2352def45ca2",
+    "vocab_id": "__bank_psy__",
+    "title": "聚光灯效应",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "dc3cda86-e38d-4227-9d3b-950aa48d7132",
+    "vocab_id": "__bank_psy__",
+    "title": "确认偏差",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "c6843f63-12fa-4877-965e-485db8b71d27",
+    "vocab_id": "__bank_psy__",
+    "title": "锚定效应",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "14da4fed-d59d-47d0-8c32-117ef915cb95",
+    "vocab_id": "__bank_psy__",
+    "title": "可得性启发式",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "c9548bbf-8bf0-4a56-910f-a79986e55048",
+    "vocab_id": "__bank_psy__",
+    "title": "损失厌恶",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "a02e7c47-3edc-4d9b-8454-4ab7cddc9010",
+    "vocab_id": "__bank_psy__",
+    "title": "框架效应",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "8ec0d5bf-42d4-4d44-a373-380469b1b79d",
+    "vocab_id": "__bank_psy__",
+    "title": "沉没成本效应",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "a2696967-f4dd-454e-9a6f-138d9f035cb2",
+    "vocab_id": "__bank_psy__",
+    "title": "达克效应",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "ae972b79-a2ea-4bac-933b-c2bf3757c619",
+    "vocab_id": "__bank_psy__",
+    "title": "心流",
+    "domain": "心理学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "f52a8318-40de-4716-b923-32dc3e2a0148",
+    "vocab_id": "__bank_psy__",
+    "title": "认知失调",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "3946073d-daee-4545-b510-b18ecef7d7d6",
+    "vocab_id": "__bank_psy__",
+    "title": "旁观者效应",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "8e6b8bc4-e0fd-479d-a6da-ac18b4e48aec",
+    "vocab_id": "__bank_psy__",
+    "title": "基本归因错误",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "64990f7a-9ca1-40c6-a405-3fe5b8e28adf",
+    "vocab_id": "__bank_psy__",
+    "title": "斯特鲁普效应",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "f2a07dfc-c9d3-46f6-a321-864aeb7a3d47",
+    "vocab_id": "__bank_psy__",
+    "title": "皮格马利翁效应",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "5882a348-c27c-408c-ba9f-49c7ba8deadb",
+    "vocab_id": "__bank_psy__",
+    "title": "峰终定律",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "ba5c551a-302c-4fa1-a218-a581e00a3fb1",
+    "vocab_id": "__bank_psy__",
+    "title": "系列位置效应",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "b0e1cfdf-bff7-4258-bd91-c7e4bab1ab8d",
+    "vocab_id": "__bank_psy__",
+    "title": "遗忘曲线",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "f5101fb9-e1b8-4035-8775-5fb5cddc4ce7",
+    "vocab_id": "__bank_psy__",
+    "title": "自我效能感",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "d2b00db2-b46d-4455-b926-ffc2d0457401",
+    "vocab_id": "__bank_psy__",
+    "title": "间隔效应",
+    "domain": "心理学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "35adde86-97a2-457a-b429-f0119399cab8",
+    "vocab_id": "__bank_psy__",
+    "title": "双过程理论",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "fe7f19a8-f8d1-4642-ab07-7498f8aeeb00",
+    "vocab_id": "__bank_psy__",
+    "title": "图式",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "51dd8e01-c33d-490d-a688-666f332fcf29",
+    "vocab_id": "__bank_psy__",
+    "title": "依恋类型",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "1d30c284-1e63-4861-abb7-213d691e6102",
+    "vocab_id": "__bank_psy__",
+    "title": "从众",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "01cfb2f8-39dd-48b7-b598-13378aab72f1",
+    "vocab_id": "__bank_psy__",
+    "title": "服从",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "9a5ebef3-382a-4cd8-be01-eb82e7a85365",
+    "vocab_id": "__bank_psy__",
+    "title": "工作记忆模型",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "0f45089c-cafa-4cd8-8aad-82afddd108d8",
+    "vocab_id": "__bank_psy__",
+    "title": "内隐联想测验",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "cda3fae0-0a80-4887-bd3b-0e3ab2d3ea77",
+    "vocab_id": "__bank_psy__",
+    "title": "元认知",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "a0e5678e-cb9c-4851-8f46-44f1f28e2189",
+    "vocab_id": "__bank_psy__",
+    "title": "具身认知",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "b1c24ad3-9d8a-49df-be5f-c2cd1ab832cc",
+    "vocab_id": "__bank_psy__",
+    "title": "韦伯-费希纳定律",
+    "domain": "心理学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "a6ca475a-bd02-4093-9ac6-d20a323a26d7",
+    "vocab_id": "__bank_phil__",
+    "title": "忒修斯之船",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "7efd9cfe-ba84-41e7-87ce-17933ae6be0e",
+    "vocab_id": "__bank_phil__",
+    "title": "电车难题",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "608ca6af-1ae2-4d26-a8ca-49c0d5a31433",
+    "vocab_id": "__bank_phil__",
+    "title": "缸中之脑",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "6f699134-ccbc-4def-a002-60322423debd",
+    "vocab_id": "__bank_phil__",
+    "title": "柏拉图洞穴寓言",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "7ebf2355-58a1-4f2f-8b8c-81888422a0f8",
+    "vocab_id": "__bank_phil__",
+    "title": "芝诺悖论",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "af3da44d-9014-4c9e-a745-7e13cac7a565",
+    "vocab_id": "__bank_phil__",
+    "title": "说谎者悖论",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "85155587-dfaf-4601-86d2-8ef19a3ba713",
+    "vocab_id": "__bank_phil__",
+    "title": "演绎推理",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "64a6043a-a6cb-4f71-80e5-ed58d66e8d07",
+    "vocab_id": "__bank_phil__",
+    "title": "归纳推理",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "63e09eb1-49e4-4187-8829-302b8b1e9600",
+    "vocab_id": "__bank_phil__",
+    "title": "非形式谬误",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "c0e56d27-21ce-422a-aab3-7f4ef247a497",
+    "vocab_id": "__bank_phil__",
+    "title": "奥卡姆剃刀",
+    "domain": "哲学知识词库",
+    "level": "入门"
+  },
+  {
+    "id": "aecab677-538d-4f06-9bf0-aebd015cc114",
+    "vocab_id": "__bank_phil__",
+    "title": "中文房间",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "93744e84-46c0-431a-bb41-8eb367900a2c",
+    "vocab_id": "__bank_phil__",
+    "title": "个人同一性",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "e128f84e-2aea-462d-88a5-9b38dd8bebea",
+    "vocab_id": "__bank_phil__",
+    "title": "自由意志",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "a47de29e-6a2c-4e5f-a2e7-c8652a1f210b",
+    "vocab_id": "__bank_phil__",
+    "title": "决定论",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "325f7464-a418-442f-a52b-094ab7408035",
+    "vocab_id": "__bank_phil__",
+    "title": "休谟问题",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "848eadf4-9a8c-412d-8656-1e3adafd68a0",
+    "vocab_id": "__bank_phil__",
+    "title": "经验机器",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "bec82739-d1b0-4e05-8879-bcb9c1439927",
+    "vocab_id": "__bank_phil__",
+    "title": "无知之幕",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "d68055c0-19e8-4b28-a518-a194a7d9deeb",
+    "vocab_id": "__bank_phil__",
+    "title": "功利主义",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "d4644ad4-f174-4954-8122-44afc3d05142",
+    "vocab_id": "__bank_phil__",
+    "title": "义务论",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "608b0f0c-7142-448a-9de4-07142c5d63e0",
+    "vocab_id": "__bank_phil__",
+    "title": "盖梯尔问题",
+    "domain": "哲学知识词库",
+    "level": "基础"
+  },
+  {
+    "id": "9e74a0bb-3b89-45c3-84b0-03878ef39f5d",
+    "vocab_id": "__bank_phil__",
+    "title": "全能悖论",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "1e3335b2-0be5-4463-ade8-aec5bc6ff1af",
+    "vocab_id": "__bank_phil__",
+    "title": "纽科姆问题",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "6e01bd25-4ac0-4ad0-86ae-a9def6873562",
+    "vocab_id": "__bank_phil__",
+    "title": "道德运气",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "7079c477-c7de-416b-b9ee-c56fd56b8d38",
+    "vocab_id": "__bank_phil__",
+    "title": "私人语言论证",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "5987f93b-57b4-4aed-a3ec-f36595706072",
+    "vocab_id": "__bank_phil__",
+    "title": "意向性",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "16989db7-9b97-4bc9-be4c-c67a301426ea",
+    "vocab_id": "__bank_phil__",
+    "title": "存在先于本质",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "1f9b9c49-8506-4211-90a5-338ed70e68ce",
+    "vocab_id": "__bank_phil__",
+    "title": "物自体",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "10ff358f-33a8-4fe9-a561-92fc9ea3d8bc",
+    "vocab_id": "__bank_phil__",
+    "title": "先验综合判断",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "45b3ae7b-d1f2-4f90-a7f8-4a8855969853",
+    "vocab_id": "__bank_phil__",
+    "title": "可证伪性",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  },
+  {
+    "id": "d612fef0-fe87-4508-8a08-f34356a5766b",
+    "vocab_id": "__bank_phil__",
+    "title": "图灵测试",
+    "domain": "哲学知识词库",
+    "level": "进阶"
+  }
+]

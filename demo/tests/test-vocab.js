@@ -7,6 +7,7 @@ const assert = require('node:assert/strict');
 
 const P = VocabParser;
 // 内置三库（banks.js）必须全部可被当前解析器处理，且范例与注册数据同源
+(0, eval)(require('fs').readFileSync('js/topic-ids.js','utf8').replace('const BUILTIN_TOPIC_IDS','globalThis.BUILTIN_TOPIC_IDS'));
 (0, eval)(require('fs').readFileSync('js/banks.js', 'utf8').replace('const BUILTIN_BANKS', 'globalThis.BUILTIN_BANKS').replace('function buildBuiltinVocabs', 'globalThis.buildBuiltinVocabs = function').replace('function getBankExample', 'globalThis.getBankExample = function'));
 for (const bank of BUILTIN_BANKS) {
   const parsed = P.parseVocabMarkdown(bank.md);

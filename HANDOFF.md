@@ -1,3 +1,60 @@
+# 2026-10-17 炼知MVP工程阶段交接（当前事实）
+
+## 授权与完成边界
+
+用户正式任务书已归档 docs/MVP_TASK_V1.0.md：明确授权本轮 FastAPI + SQLite + 既有前端、阻塞修复、最小AI挑战闭环与可复现工程；不批准全部旧PRD，也不批准完整ASR、桌面打包、主题重构或火焰原型集成。用户确认 DeepSeek deepseek-v4-pro / https://api.deepseek.com，最多3次真实请求；选择应用设置页输入Key，禁止在聊天索要Key。
+
+**真实模型服务端闭环已验证，浏览器全流程仍未验收**：用户在设置页配置Key，健康接口确认已配置后，本轮只发送1次真实DeepSeek请求，成功获得针对新解释的追问；回答修正保存、实际进程终止重启后逐字段读回通过。随后正式前端API/详情/Markdown导出代码读取live记录通过（内存DOM）。真实收费请求累计1次，未重试。重启已清除Key；进程计数归零不是新的收费授权。浏览器自动化受环境初始化故障阻塞，不能以脚本测试替代实操验收。
+
+## 分阶段实际完成
+
+1. P0-A：输入超限前端门禁；FileReader代际保护/1MiB限制；后台读取成功/失败不重渲染其他页面，避免清空设置密码框；内置124知识点稳定UUID清单；同知识点关联使用knowledgeId；抽题视觉锁定后420ms仍可取消，旧挑战generation防回调串入新挑战。原B01/B02/B03保留并回归，不重复重写。
+2. P0-B：FastAPI单worker仅127.0.0.1:8000，同源托管demo；统一输入/错误；SQLite首次初始化、目录锁、短事务、版本检查、幂等commands、模型jobs；数据目录可配置，无私人绝对路径依赖。
+3. P0-C：HTTP模式复用界面，解释→针对性追问/回答→自主修正→SQLite→档案读取/导出。开发Stub明确标mock，预存协议夹具明确example，live真实响应需来源记录。旧Demo反馈/复核/脚本不参与此真实分支。真实DeepSeek服务端闭环已用1次请求验证，浏览器全流程仍待验收。
+4. P0-D：requirements锁定实际环境，.env.example仅模板不自动加载；README/架构/API/复现/演示/第三方说明完成；AGENTS与docs00–05加本轮授权/历史提案说明，未把其他旧DEC整体标批准。已建立Git基线提交3ebb06a，工作分支codex/lianzhi-mvp，未创建远程或推送。
+
+## 修改文件
+
+- 前端：demo/index.html；demo/js/app.js、api.js（新增）、banks.js、draw.js、store.js、views.js、topic-ids.js（新增生成清单）。
+- 前端测试：demo/tests/test-p0.js、test-store.js、test-store-2.js、test-vocab.js；新增test-stage1.js、test-api.js。原sound/compass/CSS未改。
+- 后端新增：backend/__init__.py、__main__.py、config.py、db.py、lock.py、schemas.py、main.py、data/topics.json、services/llm.py、services/asr.py。
+- 工程/测试新增：tests/__init__.py、test_backend.py、test_workflow.py、test_process.py、frontend-http.cjs；scripts/sync-topics.cjs、reproduce_check.py；requirements.txt、.env.example、.gitignore。
+- 文档：README.md、AGENTS.md、demo/README.md、docs/00–05、HANDOFF.md；新增docs/MVP_TASK_V1.0.md、ARCHITECTURE.md、REPRODUCE.md、DEMO.md、THIRD_PARTY.md。
+- sources/未修改；prototypes/flame-compass/未修改，独立视觉试验继续隔离。
+
+## 数据与异步设计
+
+活动挑战Store持有remote、remoteAnswers、commandIds、busy、error；回答字典无原型，防不可信题号访问Object.prototype。原草稿/倒计时归属不变。切页/新挑战不让旧请求修改新挑战；忙碌时阻止重复提交。AbortError与BUSY保留请求ID，便于重放而不重复收费。
+SQLite topics/challenges/commands/jobs四表；保留原解释与修正版本，expected_revision防旧版本覆盖。模型调用事务外执行，单进程锁串行；重启将running标interrupted，不自动补发。Key只在后端进程内存，原文/模型不是可执行指令，无工具调用。
+内置UUID在生成清单中持久保存，不随排序变化；用户库knowledgeId含词库ID与词条ID。用户词库仍在localStorage，正常旧数据/禁用标记保留；不迁移或删除用户缓存。SQLite仅本轮挑战，Mock视频仍在内存。
+
+## 实际测试与环境
+
+- Windows11 x64 10.0.26200；Python3.12.14（应用附带解释器建立venv；系统py无注册Python），SQLite3.53.1、Node24.18.0。精确Python依赖见requirements.txt。
+- 根目录：.venv/Scripts/python.exe -m pytest -q → **22 passed，1条Starlette/httpx弃用警告**。
+- demo目录运行tests/test-*.js → 7个脚本exit0（包含12组P0断言、限长/稳定ID、动画运行/锁定延迟/跳过取消、API AbortError/BUSY保留命令ID、后台文件读取保持其他页面DOM、词库/计时/音效）；部分历史测试仅打印诊断，不称全规则验收。
+- tests/test_process.py实际启动loopback HTTP子进程；Node加载正式前端脚本，内存DOM收集输入→真实HTTP→Stub→回答修正→导出详情；终止进程再启动，原解释/修正状态/mock来源保持。不是浏览器自动化。
+- 干净副本两次：.test-runtime/reproduce-1d29ee34（当时6个Node脚本）和reproduce-38dfe71a（最新7个脚本）；每次独立venv、requirements安装、22项pytest与全部Node exit0。仍为同一Windows硬件，不是另一评审电脑。
+- MockTransport测试超时/网络/401/429/坏JSON/引用错误/额外字段/重复键，均无收费请求；测试假Key不写业务库。无Key失败不降级，example来源明确。测试只用隔离目录，不改真实用户localStorage/数据库。
+- 浏览器：cua.createBrowserTab在初始化报node_repl kernel exited / windows sandbox helper setup refresh had errors，故真实点击、375px、剪贴板/下载和实际localStorage故障未验证。open_in_codex返回queued，不表示已打开或操作成功。
+- 真实模型补充验证：记录f8ca510c-d6b7-44e1-84b7-ac44d845ab18，HTTP200，真实请求1次，未重试；UTF-8证据位于.test-runtime/live/request-1.json、saved.json、restart.json（不提交）。最初终端CP936显示乱码，重新以UTF-8读取证据确认中文原文和问题无损，非业务数据损坏。
+- 正式前端脚本读取重启live记录、详情渲染、Markdown包含原解释/问题/修正验证通过；仍为内存DOM，未声称浏览器全流程通过。
+- 未安装ASR/FFmpeg、未下载模型、未运行真实视频、未做GPU性能测试。
+
+## 当前服务与下一步
+
+当前本机8000服务已用相同.test-runtime/browser目录重启（非默认用户库），live模式、deepseek-v4-pro、官方endpoint；configured=false（Key按设计清除），当前进程计数0，但本轮累计实际请求1次。目录与证据不提交Git，不自动清理；后续使用需自行在设置重填Key，不再自动发起收费调用。
+1. 已完成真实DeepSeek单请求、回答修正保存、实际重启读回；模型来源live/api.deepseek.com/deepseek-v4-pro，用量prompt253/completion138/total391。知识点“样本空间”，自编两骰子解释；追问针对把点数和当等可能的前提，based_on逐字校验通过。问题本身仍是模型辅助意见。
+2. 环境恢复后做真实浏览器全流程与窄屏/计时/抽题切页/词库复制下载再导入复验；不能仅凭现有测试宣称前后端浏览器验收完成。
+3. 用户验收本轮后才进入视频阶段：授权中文样片/模型下载，比较faster-whisper与FunASR（同素材、中文错误/专业词/时间戳/CPU/RAM/Windows复现/权重许可），再接确认稿和版本失效。
+4. GitHub发布前确认项目开源许可、远程仓库和README独立机器复现；未擅自公开发布。
+
+已知限制：列表最近500条；活动草稿不跨重启；中途记录暂无恢复编辑入口；SQLite未来迁移尚无破坏性迁移脚本；httpx60秒为每阶段超时非总时限；真实额度为进程计数，重启不续用户授权。
+
+---
+
+## 以下为历史交接记录（保留原文；旧“未批准/未实现”以本节当前事实为准）
+
 # 交接文档（HANDOFF）
 
 > 惯例：**每次会话结束前，更新本文档**（新增一行「更新记录」，并刷新「当前状态」「模块与数据」「下一步」）。新会话开始时先读本文档恢复上下文。

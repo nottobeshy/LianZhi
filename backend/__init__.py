@@ -1,0 +1,1 @@
+"""LianZhi local application."""

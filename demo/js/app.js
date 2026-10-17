@@ -6,6 +6,7 @@ const NAV = [['home', '首页'], ['challenge', '知识挑战'], ['review', '视�
 let learningTimerHandle = null;
 let learningTimerOwner = null;
 let spinCompass = null;
+let vocabReadGeneration = 0;
 
 function formatLearningTime(ms) {
   const seconds = Math.ceil(Math.max(0, ms) / 1000);
@@ -88,14 +89,14 @@ function render() {
   cancelAllDraws();
   if (spinCompass) { spinCompass.destroy(); spinCompass = null; }
   app.innerHTML = `
-  <div class="kc-banner">非功能演示原型 — 仅供界面与流程对齐；AI 反馈、转写与进度均为预置 / 模拟数据（Demo Mock），真实行为以 docs/ 需求文档（00–05）为准</div>
+  <div class="kc-banner">${AppAPI.enabled ? '炼知 · 思考在前，AI 在后。挑战经本地 API 与 SQLite 保存；追问逐条标记 live / mock，预存案例标记 example；视频复盘仍为 Mock。' : '独立前端 Demo Mock — AI 反馈、转写与进度均为预置 / 模拟数据；正式挑战请通过本地 Python 服务进入。'}</div>
   <header class="kc-header"><div class="kc-wrap kc-header-in">
-    <div class="kc-logo"><svg class="kc-mark" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M13.8 6.2 11.2 11.2 6.2 13.8 8.8 8.8 Z" fill="var(--primary)"/></svg>选题罗盘<small>Knowledge Compass · 演示原型</small></div>
+    <div class="kc-logo"><svg class="kc-mark" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M13.8 6.2 11.2 11.2 6.2 13.8 8.8 8.8 Z" fill="var(--primary)"/></svg>炼知<small>LianZhi · 思考在前，AI 在后</small></div>
     <nav class="kc-nav" aria-label="主导航">${NAV.map(([k, l]) =>
       `<button data-action="nav" data-view="${k}" class="${S.view === k ? 'active' : ''}" aria-current="${S.view === k ? 'page' : 'false'}">${l}${k === 'works' && S.works.length ? ' · ' + S.works.length : ''}</button>`).join('')}</nav>
   </div></header>
-  <main class="kc-main">${(VIEWS[S.view] || vHome)()}</main>
-  <footer class="kc-footer">非功能演示原型 v1.3 · 2026-10-13 · 配套需求文档见仓库 docs/00–05 · 词库由 localStorage 持久化，刷新后保留（活动抽题状态仍为内存）</footer>`;
+  <main class="kc-main">${S.backend.error ? `<div class="kc-wrap"><div class="kc-errbox" style="display:block" role="alert">${esc(S.backend.error)}</div></div>` : ''}${(VIEWS[S.view] || vHome)()}</main>
+  <footer class="kc-footer">炼知 · 思考在前，AI 在后 · 词库保存在本机浏览器；HTTP 模式的挑战记录保存到 SQLite。活动挑战草稿和倒计时仍为内存状态。</footer>`;
   bindFileInputs();
   syncLearningTimer();
 }
@@ -106,18 +107,22 @@ function bindFileInputs() {
   if (!fi) return;
   fi.addEventListener('change', () => {
     const f = fi.files && fi.files[0];
+    const generation = ++vocabReadGeneration;
     if (!f) { fi.value = ''; return; }
+    if (f.size > 1048576) { S.vocabImport = {fileName:f.name,parsed:{ok:false,errors:[{line:0,msg:'词库文件超过 1 MiB，请拆分后导入。'}]}}; render(); return; }
     const r = new FileReader();
     r.onload = () => {
+      if (generation !== vocabReadGeneration) return;
       const parsed = VocabParser.parseVocabMarkdown(String(r.result || ''));
       S.vocabImport = { fileName: f.name, parsed: parsed };
       fi.value = '';
-      render();
+      if(S.view==='challenge' && S.ch.step===0) render();
     };
     r.onerror = () => {
+      if (generation !== vocabReadGeneration) return;
       S.vocabImport = { fileName: f.name, parsed: { ok: false, name: '', terms: [], errors: [{ line: 0, msg: '文件读取失败' }] } };
       fi.value = '';
-      render();
+      if(S.view==='challenge' && S.ch.step===0) render();
     };
     r.readAsText(f);
   });
@@ -126,6 +131,8 @@ function bindFileInputs() {
 /* ---------- 抽题编排：先定结果，再播动画，结束后落到锁定卡 ---------- */
 function beginDraw() {
   const c = S.ch;
+  const drawToken = {};
+  c.drawToken = drawToken;
   const pool = Store.filterPool();
   if (!pool.length) return;
   const winner = Store.pickDraw(c.lastDraw);
@@ -159,6 +166,7 @@ function beginDraw() {
       if (spinCompass) spinCompass.lock();
     },
     onDone: (reason) => {
+      if (S.ch !== c || c.drawToken !== drawToken) return;
       c.drawDone = true;
       if (spinCompass) { spinCompass.destroy(); spinCompass = null; }
       /* cancel（页面离开）：不重渲染，由触发方的下一次 render 收敛视图 */
@@ -230,6 +238,7 @@ app.addEventListener('click', e => {
         if (S.view === 'challenge') Store.pauseLearningTimer();
         S.view = d.view; S.wkSel = null; S.wkExport = false; S.wkLinkPanel = false;
         render();
+        if (AppAPI.enabled && d.view==='works') AppAPI.loadWorks();
       }
       break;
 
@@ -242,7 +251,7 @@ app.addEventListener('click', e => {
       render();
       break;
     }
-    case 'ch:vocab-clear': S.vocabImport = { fileName: '', parsed: null }; render(); break;
+    case 'ch:vocab-clear': vocabReadGeneration++; S.vocabImport = { fileName: '', parsed: null }; render(); break;
     case 'ch:vocab-example-tab': S.vocabExampleKey = d.v; render(); break;
     case 'ch:vocab-example-copy': copyVocabExample(); break;
     case 'ch:vocab-example-download': downloadVocabExample(); break;
@@ -271,16 +280,21 @@ app.addEventListener('click', e => {
     case 'ch:submit-exp': {
       const v = document.getElementById('ch-exp').value.trim();
       if (!v) { err('ch-exp-err', '不能提交空白解释。'); return; }
+      if (v.length > 6000) { err('ch-exp-err', '解释不能超过 6000 字符，请精简后重试。'); return; }
+      if (AppAPI.enabled) {AppAPI.saveExplanation(v);return;}
       S.ch.explained = v; S.ch.shortHint = v.length < 50; S.ch.step = 4; render(); break;
     }
-    case 'ch:gen-q': S.ch.qShown = true; render(); break;
+    case 'ch:gen-q': if(AppAPI.enabled && S.ch.remote){AppAPI.generateQuestions();return;} S.ch.qShown = true; render(); break;
+    case 'remote:skip': { const a=S.ch.remoteAnswers[d.id] ||= {text:'',skipped:false};a.skipped=!a.skipped;render();break; }
     case 'ch:fill-ans': { const ta = document.getElementById('ch-ans'); if (ta && Store.getChMocks().ansSample) { ta.value = Store.getChMocks().ansSample; S.ch.draft.answer = ta.value; } break; }
     case 'ch:skip-q': S.ch.skipped = true; render(); break;
     case 'ch:unskip': S.ch.skipped = false; render(); break;
     case 'ch:submit-ans': {
+      if(AppAPI.enabled && S.ch.remote){AppAPI.saveAnswers();return;}
       if (!S.ch.skipped) {
         const v = document.getElementById('ch-ans').value.trim();
         if (!v) { err('ch-ans-err', '请填写回答，或点「暂时不会 / 跳过」。'); return; }
+        if (v.length > 2000) { err('ch-ans-err', '回答不能超过 2000 字符。'); return; }
         S.ch.ans = v;
       }
       S.ch.step = 5; render(); break;
@@ -290,6 +304,8 @@ app.addEventListener('click', e => {
     case 'ch:submit-rev': {
       const v = document.getElementById('ch-rev').value.trim();
       if (!v) { err('ch-rev-err', '修正不能为空；如暂不修正可返回保存草稿。'); return; }
+      if (v.length > 6000) { err('ch-rev-err', '修正不能超过 6000 字符。'); return; }
+      if(AppAPI.enabled && S.ch.remote){AppAPI.saveRevision(v);return;}
       S.ch.rev = v; S.ch.reviewed = true; render(); break;
     }
     case 'ch:gen-script': S.ch.step = 7; render(); break;
@@ -304,6 +320,7 @@ app.addEventListener('click', e => {
     case 'rv:confirm': {
       const inputs = S.rv.segs.map((s, i) => document.getElementById('segin-' + i).value);
       if (!inputs.some(x => x.trim())) { err('rv-err', '至少保留一段有效文字才能确认。'); return; }
+      if (inputs.some(x=>x.length>2000) || inputs.join('').trim().length>12000) { err('rv-err','单段不能超过 2000 字符，全稿不能超过 12000 字符。'); return; }
       inputs.forEach((text, i) => Store.editTranscript(i, text));
       Store.confirmTranscript(); render(); break;
     }
@@ -318,11 +335,18 @@ app.addEventListener('click', e => {
     case 'rv:save': Store.saveReview(); render(); break;
 
     /* 我的知识作品 */
-    case 'wk:open': S.wkSel = +d.i; S.wkExport = false; S.wkLinkPanel = false; render(); break;
+    case 'wk:open': S.view='works'; S.wkSel = +d.i; S.wkExport = false; S.wkLinkPanel = false; render(); break;
+    case 'api:examples': AppAPI.examples();break;
+    case 'api:settings': {
+      const body={mode:document.getElementById('llm-mode').value,endpoint:document.getElementById('llm-endpoint').value,
+        model:document.getElementById('llm-model').value,api_key:document.getElementById('llm-key').value};
+      AppAPI.settings(body);break;
+    }
+    case 'api:clear-key': AppAPI.request('/settings/llm',undefined,'DELETE').then(data=>{S.backend.llm=data;render();},e=>{S.backend.error=e.message;render();});break;
     case 'wk:back': S.wkSel = null; render(); break;
     case 'wk:clear-filter': S.wkFilter = { q: '', type: 'all', domain: 'all' }; render(); break;
     case 'wk:link-panel': S.wkLinkPanel = true; render(); break;
-    case 'wk:link': { const w = S.works[S.wkSel]; if (w) w.linked = d.id; S.wkLinkPanel = false; render(); break; }
+    case 'wk:link': { const w = S.works[S.wkSel], target=S.works.find(x=>x.id===d.id); if (w && w.type==='review' && target?.type==='challenge' && w.knowledgeId && w.knowledgeId===target.knowledgeId) w.linked=d.id; S.wkLinkPanel = false; render(); break; }
     case 'wk:unlink': { const w = S.works[S.wkSel]; if (w) w.linked = null; render(); break; }
     case 'wk:export': S.wkExport = !S.wkExport; render(); break;
     case 'wk:copy': {
@@ -336,6 +360,7 @@ app.addEventListener('click', e => {
     case 'wk:del': {
       if (!armed(b)) return;
       const w = S.works[S.wkSel];
+      if(w?.remote){S.wkSel=null;AppAPI.remove(w);return;}
       if (w) { S.works.forEach(x => { if (x.linked === w.id) x.linked = null; }); S.works.splice(S.works.indexOf(w), 1); }
       S.wkSel = null; render(); break;
     }
@@ -348,6 +373,7 @@ app.addEventListener('input', e => {
   if (id === 'ch-exp') { S.ch.draft.explanation = e.target.value; const c = document.getElementById('ch-count'); if (c) c.textContent = String(e.target.value.trim().length); }
   else if (id === 'ch-ans') S.ch.draft.answer = e.target.value;
   else if (id === 'ch-rev') S.ch.draft.revision = e.target.value;
+  else if (id && id.startsWith('remote-answer-')) { const a=S.ch.remoteAnswers[id.slice(14)] ||= {text:'',skipped:false};a.text=e.target.value; }
   else if (id === 'script-md') { S.ch.scriptMd = e.target.value; S.ch.scriptEdited = true; const bd = document.getElementById('script-badge'); if (bd) bd.style.display = 'inline-block'; }
   else if (id && id.startsWith('segin-')) { Store.editTranscript(+id.slice(6), e.target.value); syncTranscriptStatus(); }
   else if (id === 'wk-q') { S.wkFilter.q = e.target.value; const list = document.getElementById('wk-list'); if (list) list.innerHTML = worksListHtml(); }
@@ -367,3 +393,4 @@ app.addEventListener('change', e => {
 });
 
 render();
+AppAPI.init();

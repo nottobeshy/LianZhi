@@ -23,6 +23,8 @@ function vHome() {
   </section>
 
   <div class="kc-wrap">
+    ${AppAPI.enabled ? `<section class="kc-section"><button class="kc-btn" data-action="api:examples">查看无密钥预存案例（example）</button>
+      ${S.backend.showExamples ? S.backend.examples.map(e=>`<div class="kc-card"><div class="kc-h">${esc(e.title)} ${tag('t-orange','example · 预存协议案例')}</div><p>${esc(e.source)}</p><div class="kc-quote">原解释：${esc(e.explanation)}</div><p>追问：${e.questions.map(esc).join('；')}</p><p>回答：${esc(e.answer)}</p><p>修正：${esc(e.revision)}</p><p class="kc-mut">${esc(e.limitations)}</p></div>`).join('') : ''}</section>` : ''}
     <section class="kc-section">
       <div class="kc-sec-h">两个核心模式，解决两个不同的问题</div>
       <p class="kc-sec-sub">挑战面向「输出之前的理解」，复盘面向「输出之后的成片」。二者可独立使用，也可围绕同一知识点建立关联。</p>
@@ -88,7 +90,34 @@ function vHome() {
 /* ---------------- 知识挑战 ---------------- */
 const CH_STEPS = ['配置', '抽题锁定', '题卡学习', '独立解释', '反向追问', '结构化反馈', '修正与复核', '脚本', '完成'];
 
+function originTag(origin) {
+  return origin ? tag(origin.mode==='live'?'t-green':'t-orange',esc(origin.mode==='live' ? 'live · '+origin.provider+' / '+origin.model : 'mock · 开发 Stub')) : tag('t-gray','尚未调用模型');
+}
+
+function remoteChallengeHtml(c) {
+  const record=c.remote, result=record.questions;
+  const note=`${c.error?`<div class="kc-errbox" style="display:block" role="alert">${esc(c.error)}</div>`:''}${c.busy?'<p class="kc-mut" role="status">正在请求本地服务，请稍候；输入已保留。</p>':''}`;
+  if(c.step===4 && !result) return `<div class="kc-card"><div class="kc-h">反向追问</div>${note}<p>独立解释已保存到 SQLite；只有明确同意后才会调用所选模型。</p><div class="kc-quote">${esc(record.explanation)}</div>
+    <p class="kc-mut">当前模式：${esc(S.backend.llm?.mode || 'live')}。未配置或请求失败会保留失败，不会替换为示例。</p>
+    <button class="kc-btn primary" data-action="ch:gen-q" ${c.busy || !S.consent.challenge?'disabled':''}>生成针对性追问</button>
+    ${!S.consent.challenge?'<p class="kc-mut">请到设置中确认“挑战类 AI 步骤”的文字外发同意。</p>':''}</div>`;
+  if(c.step===4) return `<div class="kc-card"><div class="kc-h">针对性追问 ${originTag(result.origin)}</div>${note}${result.questions.map(q=>{
+    const a=c.remoteAnswers[q.question_id] || {text:'',skipped:false};
+    return `<div class="kc-subpanel"><b>${esc(q.question)}</b><p class="kc-mut">${esc(q.why_asked)}</p><div class="kc-quote">你的原文：${esc(q.based_on)}</div>
+      ${a.skipped?'<p>已明确跳过；不会记为已回答或已掌握。</p>':`<textarea class="kc-textarea" id="remote-answer-${esc(q.question_id)}" placeholder="1–2000 字符">${esc(a.text)}</textarea>`}
+      <button class="kc-btn sm" data-action="remote:skip" data-id="${esc(q.question_id)}" ${c.busy?'disabled':''}>${a.skipped?'改为回答':'暂时不会 / 跳过'}</button></div>`;
+  }).join('')}<button class="kc-btn primary" data-action="ch:submit-ans" ${c.busy?'disabled':''}>保存回答，进入修正</button></div>`;
+  if(c.step===6) return `<div class="kc-card"><div class="kc-h">自主修正 ${originTag(result.origin)}</div>${note}<p>结合追问补充前提、边界或例子。此阶段只保存用户修正，不进行 AI 复核或生成脚本。</p>
+    <textarea id="ch-rev" class="kc-textarea" placeholder="1–6000 字符">${esc(c.draft.revision ?? '')}</textarea><div class="kc-errbox" id="ch-rev-err" role="alert"></div>
+    <button class="kc-btn primary" data-action="ch:submit-rev" ${c.busy?'disabled':''}>保存修正到 SQLite</button></div>`;
+  return `<div class="kc-card"><div class="kc-h">本轮记录已保存 ${originTag(result?.origin)}</div>${note}<p>原解释、追问、回答和修正已写入 SQLite，可重启服务后在“我的知识作品”读取。</p><p class="kc-mut">这不代表事实核查或掌握证明。AI 反馈、修正复核及讲稿尚未接入真实服务。</p><button class="kc-btn primary" data-action="nav" data-view="works">查看保存记录</button> <button class="kc-btn" data-action="ch:restart">新建挑战</button></div>`;
+}
+
 function chStepsHtml() {
+  if(AppAPI.enabled) {
+    const stages=[[0,'配置'],[1,'抽题'],[2,'学习'],[3,'独立解释'],[4,'追问与回答'],[6,'自主修正'],[8,'记录保存']];
+    return '<div class="kc-steps kc-wrap">'+stages.map(([i,n])=>`<span class="kc-step ${i<S.ch.step?'done':''} ${i===S.ch.step?'cur':''}">${i<S.ch.step?'✓ ':''}${n}</span>`).join('<span class="kc-mut">→</span>')+'</div>';
+  }
   return '<div class="kc-steps kc-wrap" style="margin-bottom:0">' + CH_STEPS
     .map((n, i) => `<span class="kc-step ${i < S.ch.step ? 'done' : ''} ${i === S.ch.step ? 'cur' : ''}">${i < S.ch.step ? '✓ ' : ''}${n}</span>`)
     .join('<span class="kc-mut">→</span>') + '</div>';
@@ -195,6 +224,8 @@ function vChallenge() {
   const pool = Store.filterPool();
   let body = '';
 
+  if(c.remote) return chStepsHtml()+'<div class="kc-wrap">'+remoteChallengeHtml(c)+'</div>';
+
   if (c.step === 0) {
     body = chVocabCard() + chDrawConfigCard();
   } else if (c.step === 1) {
@@ -275,8 +306,8 @@ function vChallenge() {
       <p class="kc-mut" style="margin:4px 0 10px">请用自己的话向同学解释这个知识点，可以举例并说明适用边界。提交后保存为不可覆盖的 v1；再次修改将生成新版本。</p>
       <textarea id="ch-exp" class="kc-textarea" placeholder="写下你的解释…（1–6000 字符，去空白后校验）">${esc(c.draft.explanation ?? c.explained ?? '')}</textarea>
       <div class="kc-row" style="margin-top:8px"><span class="kc-mut">已输入 <span id="ch-count">${(c.draft.explanation ?? c.explained ?? '').trim().length}</span> 字符</span></div>
-      <div class="kc-errbox" id="ch-exp-err" role="alert"></div>
-      <div class="kc-row" style="margin-top:10px"><button class="kc-btn primary" data-action="ch:submit-exp">提交独立解释</button>${Store.isRich() ? '<button class="kc-btn sm" data-action="ch:fill-exp">填入示例解释（含典型误解）</button>' : ''}</div>
+      <div class="kc-errbox" id="ch-exp-err" role="alert" ${c.error?'style="display:block"':''}>${esc(c.error)}</div>
+      <div class="kc-row" style="margin-top:10px"><button class="kc-btn primary" data-action="ch:submit-exp" ${c.busy?'disabled':''}>${c.busy?'正在保存…':'提交独立解释'}</button>${Store.isRich() && !AppAPI.enabled ? '<button class="kc-btn sm" data-action="ch:fill-exp">填入示例解释（含典型误解）</button>' : ''}</div>
       <p class="kc-mut" style="margin-top:8px">AI 不会在此步骤前展示完整标准答案；你的解释是后续追问与反馈的唯一依据。</p>
     </div>`;
   } else if (c.step === 4) {
@@ -496,7 +527,17 @@ function worksListHtml() {
   }).join('');
 }
 
+function remoteRecordText(r) {
+  const origin=r.questions?.origin;
+  return '## 原始解释（不可覆盖）\n\n'+r.explanation+'\n\n## 追问来源\n\n'+(origin?JSON.stringify(origin,null,2):'尚未调用模型')+
+    '\n\n## 追问与回答\n\n'+(r.questions?.questions || []).map(q=>{
+      const a=r.answers.find(x=>x.question_id===q.question_id);
+      return '### '+q.question+'\n\n原因：'+q.why_asked+'\n\n原文引用：'+q.based_on+'\n\n回答：'+(!a?'尚未回答':a.state==='skipped'?'明确跳过':a.text);
+    }).join('\n\n')+'\n\n## 修正版本\n\n'+r.revisions.map((v,i)=>'### v'+(i+1)+'\n\n'+v.text).join('\n\n')+'\n\n状态：'+r.stage+'；记录版本：'+r.revision+'\n\n模型追问是辅助意见，不是事实核查或掌握证明。';
+}
+
 function buildExportMd(w) {
+  if(w.remote) return '# '+w.title+'\n\n知识点 ID：'+w.knowledgeId+'\n记录 ID：'+w.id+'\n\n'+remoteRecordText(w.record);
   let md = '# ' + w.title + '\n\n- 类型：' + (w.type === 'challenge' ? '知识挑战' : '视频复盘') + '\n- 知识点：' + w.kp + '\n- 保存时间：' + w.updated + '\n';
   if (w.type === 'challenge') {
     const mk = w.rich ? MOCK.chCoin : null;
@@ -530,7 +571,7 @@ function vWorks() {
         </select>
         <select id="wk-domain" class="kc-select" style="max-width:150px">
           <option value="all"${S.wkFilter.domain === 'all' ? ' selected' : ''}>全部词库</option>
-          ${S.vocabs.map(v => `<option value="${esc(v.name)}"${S.wkFilter.domain === v.name ? ' selected' : ''}>${esc(v.name)}</option>`).join('')}
+          ${Array.from(new Set([...S.vocabs.map(v=>v.name),...S.works.map(w=>w.domain)])).map(name => `<option value="${esc(name)}"${S.wkFilter.domain === name ? ' selected' : ''}>${esc(name)}</option>`).join('')}
           <option value="未分类"${S.wkFilter.domain === '未分类' ? ' selected' : ''}>未分类</option>
         </select>
       </div>
@@ -540,7 +581,9 @@ function vWorks() {
   const w = S.works[S.wkSel];
   if (!w) { S.wkSel = null; return vWorks(); }
   let detail = '';
-  if (w.type === 'challenge') {
+  if (w.remote) {
+    detail=`<div class="kc-card"><div class="kc-h">SQLite 挑战记录 ${originTag(w.record.questions?.origin)}</div><div class="kc-pre">${esc(remoteRecordText(w.record))}</div></div>`;
+  } else if (w.type === 'challenge') {
     const linked = S.works.filter(x => x.type === 'review' && x.linked === w.id);
     detail = `
     <div class="kc-card"><div class="kc-h">阶段状态</div>
@@ -558,7 +601,7 @@ function vWorks() {
     </div>`;
   } else {
     const linkedCh = w.linked ? S.works.find(x => x.id === w.linked) : null;
-    const cands = S.works.filter(x => x.type === 'challenge' && x.kp === w.kp && x.id !== w.linked);
+    const cands = S.works.filter(x => x.type === 'challenge' && w.knowledgeId && x.knowledgeId === w.knowledgeId && x.id !== w.linked);
     detail = `
     <div class="kc-card"><div class="kc-h">阶段状态</div>
       <div>${st('done', '复盘 已保存')} ${st('done', '视频 已归档')} ${st('done', '转写 已确认 v' + w.version)} ${w.mediaGone ? st('wait', '媒体 已清理') : ''}</div>
@@ -602,21 +645,29 @@ function vWorks() {
 /* ---------------- 设置与帮助 ---------------- */
 function vSettings() {
   return `
-  <div class="kc-wrap"><div class="kc-grid" style="grid-template-columns:1fr 1fr">
+  <div class="kc-wrap">${AppAPI.enabled ? `<div class="kc-card"><div class="kc-h">本机模型设置</div>
+    <p>本地 API：${S.backend.ready?'已连接':'未连接 / 检查服务'}；模式：${esc(S.backend.llm?.mode || 'live')}；真实 Key：${S.backend.llm?.configured?'已配置（不回显）':'未配置'}。</p>
+    <label>调用模式<select class="kc-select" id="llm-mode"><option value="live" ${S.backend.llm?.mode==='mock'?'':'selected'}>live · 真实模型</option><option value="mock" ${S.backend.llm?.mode==='mock'?'selected':''}>mock · 开发 Stub，不发网</option></select></label>
+    <label>API endpoint<input class="kc-input" id="llm-endpoint" value="${esc(S.backend.llm?.endpoint || 'https://api.deepseek.com')}"></label>
+    <label>模型名称<input class="kc-input" id="llm-model" value="${esc(S.backend.llm?.model || '')}" placeholder="deepseek-v4-pro"></label>
+    <label>API Key（仅后端进程内存）<input class="kc-input" type="password" id="llm-key" autocomplete="off" placeholder="留空保留现有 Key；重启后需重填"></label>
+    <p class="kc-mut">发送内容：所选知识点与用户解释文字；不发送视频。真实请求默认最多 3 次/进程，不自动重试；重启额度计数会重置，实际费用以服务商为准。</p>
+    <button class="kc-btn primary" data-action="api:settings" ${S.backend.busy?'disabled':''}>${S.backend.busy?'正在保存…':'应用本次配置'}</button> <button class="kc-btn" data-action="api:clear-key">清除进程内 Key</button>
+    </div>` : ''}<div class="kc-grid" style="grid-template-columns:1fr 1fr">
     <div class="kc-card"><div class="kc-h">本地依赖 ${mockTag()}</div>
       <dl class="kc-kv">
-        <dt>FFmpeg</dt><dd>${st('done', '已检测')}</dd>
-        <dt>本地 ASR</dt><dd>${st('done', 'faster-whisper small · int8')}</dd>
-        <dt>SQLite</dt><dd>${st('done', '可用')}</dd>
-        <dt>大模型 API</dt><dd>${st('fail', '未配置')}</dd>
+        <dt>FFmpeg</dt><dd>${AppAPI.enabled?st('wait','本轮未接入'):st('done', '已检测')}</dd>
+        <dt>本地 ASR</dt><dd>${AppAPI.enabled?st('wait','本轮未实现'):st('done', 'faster-whisper small · int8')}</dd>
+        <dt>SQLite</dt><dd>${AppAPI.enabled?st(S.backend.ready?'done':'fail',S.backend.ready?'本地 API 已连接':'本地 API 未连接'):st('done', '可用')}</dd>
+        <dt>大模型 API</dt><dd>${AppAPI.enabled?originTag(S.backend.llm?.mode==='mock'?{mode:'mock'}:S.backend.llm?.configured?{mode:'live',provider:'已配置',model:S.backend.llm.model}:null):st('fail', '未配置')}</dd>
       </dl>
-      <p class="kc-mut" style="margin-top:8px">以上为演示状态值。密钥示例（演示版不保存任何输入，真实版仅存本地环境变量 / secrets，不回显）：</p>
+      <p class="kc-mut" style="margin-top:8px">${AppAPI.enabled?'连接状态来自本地 API；配置模型不代表已经完成真实调用。':'以上为演示状态值，不代表已检测真实依赖。'}</p>
       <input class="kc-input" placeholder="LLM_API_KEY=sk-****（禁用）" disabled>
     </div>
     <div class="kc-card"><div class="kc-h">文字外发同意 <span class="kc-mut">（按类别，可随时撤回）</span></div>
       <div class="kc-switchrow"><input type="checkbox" id="consent-ch" ${S.consent.challenge ? 'checked' : ''}><div><b>挑战类 AI 步骤</b>（追问 / 反馈 / 修正复核 / 脚本）<div class="kc-mut">发送：你的解释、回答、修正与来源片段（仅文字）。未同意时学习与保存仍可用，AI 不可调用。</div></div></div>
       <div class="kc-switchrow"><input type="checkbox" id="consent-rv" ${S.consent.review ? 'checked' : ''}><div><b>视频复盘</b><div class="kc-mut">发送：确认稿文字与来源片段。原视频与音频始终不发给云端模型。</div></div></div>
-      <p class="kc-mut" style="margin-top:8px">演示版不会真实发送任何数据；服务商与数据保留政策将在选定后披露。</p>
+      <p class="kc-mut" style="margin-top:8px">${AppAPI.enabled?'live 模式点击生成追问会向配置的服务商发送知识点与独立解释；请先了解该服务商的数据政策。视频复盘仍为 Mock，不发送媒体。':'独立前端 Demo 不会真实发送任何数据。'}</p>
     </div>
     <div class="kc-card"><div class="kc-h">状态样式一览</div>
       <div>${st('done')} ${st('act')} ${st('wait')} ${st('fail')} ${st('load')} ${mockTag()}</div>

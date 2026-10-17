@@ -23,6 +23,7 @@ globalThis.localStorage = localStorage;
 
 const vcode = require('fs').readFileSync('js/vocab.js', 'utf8');
 (0, eval)(vcode.replace('window.VocabParser', 'globalThis.VocabParser'));
+(0, eval)(require('fs').readFileSync('js/topic-ids.js','utf8').replace('const BUILTIN_TOPIC_IDS','globalThis.BUILTIN_TOPIC_IDS'));
 (0, eval)(require('fs').readFileSync('js/banks.js', 'utf8').replace('const BUILTIN_BANKS', 'globalThis.BUILTIN_BANKS').replace('function buildBuiltinVocabs', 'globalThis.buildBuiltinVocabs = function').replace('function getBankExample', 'globalThis.getBankExample = function'));
 
 const mcode = require('fs').readFileSync('js/mock-data.js', 'utf8');
