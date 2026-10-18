@@ -12,6 +12,9 @@ from .schemas import CreateChallenge, AskQuestions, SubmitAnswers, SubmitRevisio
 from .services.llm import LLMService
 from .lock import data_lock
 from .db import now
+from .services.video import VideoService
+from .video_routes import add_video_routes
+from .review_routes import add_review_routes
 
 
 def failure(code, message, status):
@@ -22,17 +25,24 @@ def create_app(config=None, llm=None):
     config = config or Config()
     db = Database(config.data_dir)
     llm = llm or LLMService(config)
+    videos = VideoService(config, db)
 
     @asynccontextmanager
     async def lifespan(app):
         with data_lock(config.data_dir):
             db.initialize()
-            yield
+            llm.credentials.restore()
+            videos.media_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                yield
+            finally:
+                videos.close()
 
     app = FastAPI(title='炼知 LianZhi', version='1.0.0', lifespan=lifespan)
     app.state.db = db
     app.state.config = config
     app.state.llm = llm
+    app.state.videos = videos
 
     @app.exception_handler(Problem)
     async def problem_handler(request, exc):
@@ -60,17 +70,23 @@ def create_app(config=None, llm=None):
         host = request.url.hostname
         if host not in ('127.0.0.1', 'localhost', 'testserver'):
             return failure('HOST_DENIED', '仅允许本机地址访问。', 403)
+        if request.url.path.startswith('/api/') and request.headers.get('sec-fetch-site') in ('cross-site', 'same-site'):
+            return failure('ORIGIN_DENIED', '拒绝跨站本地 API 请求。', 403)
         if request.method not in ('GET', 'HEAD', 'OPTIONS'):
             origin = request.headers.get('origin')
             if request.headers.get('sec-fetch-site') == 'cross-site' or (origin and origin != f'{request.url.scheme}://{request.url.netloc}'):
                 return failure('ORIGIN_DENIED', '拒绝跨站写入请求。', 403)
-            chunks, size = [], 0
-            async for chunk in request.stream():
-                size += len(chunk)
-                if size > 65536:
-                    return failure('INPUT_LIMIT', '请求超过 64 KiB。', 413)
-                chunks.append(chunk)
-            request._body = b''.join(chunks)
+            if request.url.path == '/api/settings/llm' and request.method == 'POST' and request.headers.get('content-type', '').split(';')[0] != 'application/json':
+                return failure('CONTENT_TYPE', '敏感配置只接受同源 JSON 请求。', 415)
+            # Videos are bounded while streaming, never buffered into the JSON body.
+            if not (request.method == 'POST' and request.url.path in ('/api/videos', '/api/videos/')):
+                chunks, size = [], 0
+                async for chunk in request.stream():
+                    size += len(chunk)
+                    if size > 65536:
+                        return failure('INPUT_LIMIT', '请求超过 64 KiB。', 413)
+                    chunks.append(chunk)
+                request._body = b''.join(chunks)
         response = await call_next(request)
         response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -78,7 +94,7 @@ def create_app(config=None, llm=None):
 
     @app.get('/api/health')
     def health():
-        return {'status': 'ok', 'app': 'LianZhi', 'database': 'ready', 'asr': 'not_implemented', 'llm': llm.status()}
+        return {'status': 'ok', 'app': 'LianZhi', 'database': 'ready', 'asr': videos.status(), 'llm': llm.status()}
 
     @app.post('/api/challenges', status_code=201)
     def create(body: CreateChallenge):
@@ -102,13 +118,7 @@ def create_app(config=None, llm=None):
 
     @app.delete('/api/settings/llm')
     def clear_key():
-        if not llm.lock.acquire(blocking=False):
-            raise Problem('BUSY', '模型请求运行中。', 409)
-        try:
-            config.api_key = ''
-        finally:
-            llm.lock.release()
-        return llm.status()
+        return llm.clear_key()
 
     @app.post('/api/challenges/{challenge_id}/questions')
     def questions(challenge_id: str, body: AskQuestions):
@@ -181,6 +191,9 @@ def create_app(config=None, llm=None):
                  'answer': '正正、正反、反正、反反；假设硬币公平、两次独立。',
                  'revision': '在公平且独立的前提下，四个等可能结果中三个至少出现一次正面，所以是3/4。',
                  'limitations': '只说明学习流程，不证明掌握；未执行事实核查或模型调用。'}]}
+
+    add_video_routes(app, videos)
+    add_review_routes(app, videos, llm)
 
     @app.get('/api/{unknown:path}', include_in_schema=False)
     def missing_api(unknown: str):

@@ -14,12 +14,14 @@ import pytest
 
 
 @contextmanager
-def server(tmp_path):
+def server(tmp_path, overrides=None, log_path=None):
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
-    env = {**os.environ, 'LIANZHI_DATA_DIR': str(tmp_path), 'LLM_MODE': 'mock', 'LLM_API_KEY': ''}
-    process = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'backend.main:app', '--host', '127.0.0.1', '--port', str(port), '--log-level', 'warning'], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    env = {k:v for k,v in os.environ.items() if not k.startswith('LLM_')}
+    env.update({'LIANZHI_DATA_DIR': str(tmp_path), 'LLM_MODE': 'mock', 'LLM_API_KEY': '', **(overrides or {})})
+    log = open(log_path, 'ab') if log_path else subprocess.DEVNULL
+    process = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'backend.main:app', '--host', '127.0.0.1', '--port', str(port), '--log-level', 'warning'], cwd=ROOT, env=env, stdout=log, stderr=log)
     base = f'http://127.0.0.1:{port}'
     try:
         for _ in range(100):
@@ -37,6 +39,8 @@ def server(tmp_path):
     finally:
         process.terminate()
         process.wait(timeout=10)
+        if log_path:
+            log.close()
 
 
 def test_actual_http_frontend_and_process_restart(tmp_path):

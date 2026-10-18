@@ -72,6 +72,7 @@ html,body{margin:0;padding:0;background:#0f1013;overflow-x:clip}
 #kc-root .kc-switchrow{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px dashed var(--border)}
 #kc-root .kc-switchrow:last-child{border-bottom:none}
 #kc-root .kc-switchrow input{margin-top:4px;transform:scale(1.25)}
+#kc-root #sound-volume{display:block;width:100%;max-width:240px;margin:6px 0 0;transform:none}
 #kc-root .kc-footer{color:var(--muted);font-size:12px;text-align:center;padding:20px 16px 0}
 #kc-root .kc-wkitem{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer}
 #kc-root .kc-wkitem:hover{background:var(--soft)}

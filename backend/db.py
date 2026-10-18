@@ -43,8 +43,14 @@ class Database:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as con:
             version = con.execute('PRAGMA user_version').fetchone()[0]
-            if version > 1:
+            if version > 3:
                 raise RuntimeError('数据库版本较新，请使用匹配的应用版本。')
+            if version == 1 and not self.path.with_name('app.pre-video-v1.db').exists():
+                with sqlite3.connect(self.path.with_name('app.pre-video-v1.db')) as backup:
+                    con.backup(backup)
+            if version == 2 and not self.path.with_name('app.pre-review-v2.db').exists():
+                with sqlite3.connect(self.path.with_name('app.pre-review-v2.db')) as backup:
+                    con.backup(backup)
             con.executescript('''
                 CREATE TABLE IF NOT EXISTS topics(id TEXT PRIMARY KEY, data TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS challenges(id TEXT PRIMARY KEY, data TEXT NOT NULL);
@@ -54,11 +60,29 @@ class Database:
                 CREATE TABLE IF NOT EXISTS jobs(request_id TEXT PRIMARY KEY, challenge_id TEXT NOT NULL
                     REFERENCES challenges(id) ON DELETE CASCADE, fingerprint TEXT NOT NULL,
                     state TEXT NOT NULL, error_code TEXT);
-                PRAGMA user_version=1;
             ''')
+            if version < 2:
+                con.execute('BEGIN IMMEDIATE')
+                con.execute('CREATE TABLE videos(id TEXT PRIMARY KEY, upload_request_id TEXT UNIQUE NOT NULL, upload_fingerprint TEXT NOT NULL, data TEXT NOT NULL)')
+                con.execute('CREATE TABLE video_commands(request_id TEXT PRIMARY KEY, video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE, kind TEXT NOT NULL, fingerprint TEXT NOT NULL, result TEXT NOT NULL)')
+                con.execute('PRAGMA user_version=2')
+            if version < 3:
+                if not con.in_transaction:
+                    con.execute('BEGIN IMMEDIATE')
+                con.execute('CREATE TABLE video_reviews(id TEXT PRIMARY KEY, request_id TEXT UNIQUE NOT NULL, video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE, data TEXT NOT NULL)')
+                con.execute('PRAGMA user_version=3')
             for topic in json.loads((ROOT / 'backend/data/topics.json').read_text(encoding='utf-8')):
                 con.execute('INSERT OR IGNORE INTO topics VALUES(?,?)', (topic['id'], encode(topic)))
             con.execute("UPDATE jobs SET state='interrupted',error_code='INTERRUPTED' WHERE state='running'")
+            for row in con.execute("SELECT id,data FROM videos WHERE json_extract(data,'$.state')='running'").fetchall():
+                data = json.loads(row['data'])
+                data.update(state='interrupted', error={'code':'INTERRUPTED','message':'上次转写随应用退出中断，请显式重新启动转写。'}, updated_at=now())
+                data['revision'] += 1
+                con.execute('UPDATE videos SET data=? WHERE id=?', (encode(data), row['id']))
+            for row in con.execute("SELECT id,data FROM video_reviews WHERE json_extract(data,'$.state')='running'").fetchall():
+                data = json.loads(row['data'])
+                data.update(state='interrupted', error={'code':'INTERRUPTED', 'message':'上次AI复盘随应用退出中断，未自动重试。'})
+                con.execute('UPDATE video_reviews SET data=? WHERE id=?', (encode(data), row['id']))
 
     def get(self, challenge_id):
         with self.connect() as con:

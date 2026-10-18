@@ -1,3 +1,241 @@
+# 2026-10-18 视频口播AI复盘与双版本文案（当前专项）
+
+用户本轮明确授权确认稿云端文字复盘、原始/AI建议对照、用户继续编辑、SQLite持久化及版本历史；提供项目根目录“知识讲解测试.mp4”作为新视频，允许使用已配置Key作真实联调。仅文本，不发送原视频/音频，不扩展画面/情绪/评分或桌面打包。用户要求完成后暂停验收。
+
+## 当前结果与不可混淆的真实状态
+
+- 功能已接入，73项常规pytest通过（4项显式ASR/浏览器默认跳过）；真实浏览器/本地ASR+明确Stub的完整链路通过。用户明确回复“已更新”后，最后一次授权真实DeepSeek复盘**成功**，live双版本对照、实际剪贴板、用户编辑保存、页面刷新、真正后端重启及新浏览器读回均通过；真实结果隔离副本中修改确认稿后正确过期，正式成功稿保持当前有效。第一次认证失败仍原样保留，未把Stub当live，无自动重试。
+- 本专项真实HTTP尝试2次（首次认证拒绝、更新Key后一次成功）；加历史1次，跨进程累计**3次、总授权上限已用尽**。本机`.test-runtime/video-review-live-budget.json`当前attempts=3，记录两次本专项调用前占用，无Key。不得以进程归零/修改额度文件继续调用。验收后已重启8000服务并设置**LLM_MAX_REQUESTS=0**，仅查阅/复制/编辑已有结果，不再收费请求；后续本机重启也须保留0，除非用户另行明确授权新预算。
+- 用户更新后Key已安全保存，但模型名被旧设置页再次保存为空；按此前明确确认补deepseek-v4-pro并保留Key，没有以额外模型请求探测。最后一次真实响应证实该配置可用，配置configured本身仍不等于服务商有效性验证。
+- 真实失败保存在当前用户数据目录`.test-runtime/browser/app.db`：video_id=`4d629787-5e9d-4c34-8dff-8c144e7b3d86`，review_id=`88e9cc9c-cdac-4f43-8439-e5f7b34e8e0d`，确认版本`d814f05e-2e7f-43e5-8c37-b3456c4df522`。state=failed、error=API_CONFIGURATION，ai_script为空；用户确认稿完整保留。服务商状态由适配器归类401/403，对外返回502；没有记录服务商原始错误或Key。
+
+## 实际实现
+
+1. backend/prompts/video_review.py独立Prompt版本`video-script-review-v1`；保原意、知识限定条件/逻辑/口播表达、未知待核实、不虚构事实/来源、不执行用户文本指令、只分析文本。模型只输出revised_script/change_summary/needs_verification；原始版本只由后端SQLite确认快照生成，时间只用原确认段。
+2. backend/schemas.py新增ReviewVideo/ReviewChange/VideoReviewOutput/SaveReviewScript；建议稿1–16000字符、摘要最多3条且段ID必须真实、待核实最多10条；不接受模型时间戳、verified或多余字段，严格JSON重复键/截断/引用检查。
+3. backend/services/llm.py将原HTTP行为提取为共用_complete，知识挑战原提示词/协议不变；新增review_video。共享Key/端点允许主机/锁/预算/60秒每阶段超时/128KiB响应界限/无重试，DeepSeek thinking disabled，复盘max_tokens4096。只有显式mock产生“开发Stub，非真实模型”；live失败不回退。认证/访问拒绝错误提示已在源码细化，不泄露Key或服务商正文。
+4. backend/review_db.py、review_routes.py新增独立复盘存储和路由，main.py注册。POST /api/videos/{id}/review读取当前确认稿、检查expected_revision/transcript_version_id/consent；同命令成功重放不再收费，不同内容409、失败需主动新请求。GET /api/videos/{id}/reviews返回最近100份；POST /api/videos/{id}/reviews/{review_id}/script以复盘revision保存用户编辑，AI原始建议不覆盖、编辑历史追加。生成期间原稿改变则结果仍绑定旧快照，读取立即stale。
+5. db.py增量Schema v3，仅新增video_reviews(id,request_id UNIQUE,video_id外键,data JSON)；v2升级前一次备份app.pre-review-v2.db，保留v1原备份。确认稿/原ASR不移表不覆盖，旧challenge/video数据不因迁移重写。重启running复盘标interrupted，不自动补发。
+6. demo/js/store/api/app/views.js：现有视频页增加文字外发风险与目标、同意、主动按钮、未确认/缺配置/运行/失败/成功/过期、两栏对照、复制、用户编辑保存、折叠修改摘要/待核实/AI原始建议。摘要段跳转只用确认稿原时间；转写本地编辑立即标过期/禁止新复盘。输入/网络失败保留原稿和编辑，相同不确定请求保留ID。复用kc-grid，无CSS/首页结构/抽题/罗盘/音量代码改造。作品详情已有“打开视频与校对”入口可查看持久化复盘，原视频API不混入AI结果。
+7. 新增tests/test_video_review.py、test_video_review_real.py、browser-video-review.cjs、demo/tests/test-video-review.js；既有test-video.js适配GET reviews夹具，test_video.py预期schema从2改3。新增docs/VIDEO_REVIEW.md，同步README/AGENTS、架构/复现/演示/ASR/demo README和本既有HANDOFF；所有旧章节保留。
+
+## 实际测试与失败记录
+
+- 共享LLM和视频初步回归：24 passed；复盘单测初次12通过1失败，是夹具断言错误地把第二份确认稿也限制为第一份原文，修正后**13 passed in1.84s**。包括同意/确认/Key/预算、Prompt输入不含媒体/时间、严格JSON/未知段/伪时间戳/多余字段、超时/网络/认证、幂等、不覆盖原稿/AI、用户编辑冲突、转写过期、生成期间原稿改变、v2迁移备份及中断。
+- 完整`.venv/Scripts/python.exe -m pytest -q --basetemp=.test-runtime/video-review-regression-20261018`：**73 passed, 4 skipped in28.93s**。普通测试无用户Key或真实云端调用；MockTransport的mode=live不是实际收费成功证据。
+- 最终demo目录全部**11个脚本exit0**，包括新增`node tests/test-video-review.js`：同意/原文、输出转义、复制、编辑切页保留、保存区分AI原稿、网络请求ID保留和转写过期。部分旧脚本仅打印，不当全部规则验收。认证提示细化后又执行tests/test_workflow.py与tests/test_video_review.py：**26 passed in3.57s**；backend/tests compileall及新增浏览器脚本/前端语法检查通过，git diff --check无空白错误（保留既有LF/CRLF提示）。私人视频、数据库和本机预算文件经git check-ignore确认被忽略。
+- 新视频10118319字节，正式ASR44.6秒/5段；源文件SHA256=`77b9f6c5987030584946c27542411659c05503fb3550b2997f1cd4553298c9e4`。未修改源文件，不输出/提交口播正文。真实浏览器自动化校对只作文本编辑/确认机制验证，不声称完成知识人工核实。
+- 不收费实际浏览器专项：设置LIANZHI_ASR_TEST_VIDEO为上述视频，LIANZHI_BROWSER_TEST=1，复用已有Playwright/Chromium148；`python -m pytest tests/test_video_review_real.py -q -s --basetemp=.test-runtime/video-review-browser-stub-fixed`：**1 passed in15.67s**。正式上传→真实ASR→确认→明确Stub复盘→系统剪贴板复制→用户编辑保存→转写新确认后stale→页面刷新→实际后端重启/新浏览器读取，全通过，page_errors=[]。证据在该目录test_actual_browser_asr_review0/review-evidence.json和review.png，均私有忽略。首次浏览器测试在剪贴板异步写入未完成时断言失败，修正为等待成功提示及Windows换行归一后通过，没有放宽文字内容相等要求。
+- 真实服务前备份到`.test-runtime/video-review-live/20261018-222336/before-review.db`及旧挑战内容hash；同目录保留启动证据。Key已保存但模型名最初为空，按用户此前明确确认补deepseek-v4-pro，未读/回显Key、该设置操作不发模型请求。随后停本轮服务并以原`.test-runtime/browser`重启，已自动v2→v3，备份存在，旧三条挑战(id,data)hash不变。
+- 真实浏览器命令`node tests/browser-video-review.cjs`，TEST_BASE_URL指向正式8000，TEST_EXPECT_MODE=live、LIANZHI_ALLOW_LIVE_REVIEW=1、指定持久化预算文件和新视频。正式流程上传/ASR/首段补句号并确认/勾选同意，实际模型请求返回502 API_CONFIGURATION。停止且无自动重试，未获得live建议/复制/保存的成功证据。
+
+## 下一步与验收边界
+
+用户明确回复“已更新”后的最后一次真实命令：设置TEST_EXISTING_VIDEO_ID=`4d629787-5e9d-4c34-8dff-8c144e7b3d86`、TEST_EXPECT_MODE=live、TEST_STALE_SOURCE=0及预算文件，运行`node tests/browser-video-review.cjs`。同一正式视频/确认稿，未重复上传或ASR，主动勾选同意并点击，DeepSeek deepseek-v4-pro返回真实建议稿**89字符、3条修改摘要、0项待核实**。0待核实不代表事实正确或已验证。success review_id=`fcc03335-3342-4fda-99cb-d60689a7c382`，origin.mode=live、Prompt=video-script-review-v1，page_errors=[]。实际复制AI稿、用户编辑版保存、原ASR不变、页面刷新通过，stale=false。安全汇总在`.test-runtime/video-review-live/live-evidence-final.json`，截图live-review-final.png；口播正文/Key不输出普通日志，不提交。
+
+实际持久化验收：先以只读SQLite备份after-live.db及私有before-restart-records.json，再真正终止本轮服务的监听进程72696，原数据目录启动新进程（launcher76108），LLM_MAX_REQUESTS=0。health正常，已保存Key/模型自动恢复；HTTP视频记录与全部复盘记录逐字段相等。再次用全新Chromium的只读分支打开同视频，live原始/AI/用户编辑版读回通过，stale=false、page_errors=[]；未发模型请求。
+
+真实报告过期验收：以after-live.db创建`.test-runtime/video-review-live/stale-copy`隔离副本，只复制该受控UUID视频，临时服务不配置真实Key。在副本对转写首段作修改并产生新确认版本，实际GET返回同一live报告stale=true，原文/AI建议均未改；全新浏览器打开副本确认过期状态，副本llm.live_requests=0。正式8000复盘记录与重启前快照仍完全相等，保持当前有效。证据`.test-runtime/video-review-live/restart-stale-evidence.json`。旧三条挑战hash及根目录源视频hash均未变，原认证失败记录仍在。
+
+本轮授权的功能和上述实际验收完成，暂停等用户人工确认。无Windows打包入口或Release候选版，本轮无新运行依赖/未改打包路径，无法验证桌面包兼容。人工知识/来源核验、时间戳偏差、扬声器、其他硬件/浏览器未验。当前8000保持可访问、旧三条挑战与当前成功视频保留，默认另目录视频不合并；没有Git提交/推送、模型下载、sources/修改或外发媒体。授权额度3次已用尽，不再发任何真实模型请求。
+
+---
+
+# 2026-10-18 恢复旧记录显示（历史运行目录交接）
+
+用户反馈连接拒绝后，曾启动默认数据目录，导致旧挑战记录未显示。随后用户要求显示旧记录：已备份两份数据库到`.test-runtime/data-directory-switch/20261018-215119/`，停止本轮启动的无运行转写任务服务，将8000服务改用`E:\Projects\KnowledgeCompass\.test-runtime\browser`。GET /api/health正常，GET /api/challenges实际返回3条；切换前后按(id,data)计算SHA256一致，三条旧记录未改变。默认目录仍保留1条视频，未合并/移动/删除。当前两份库已分别保留备份。
+
+后续在项目根目录启动并继续显示这三条旧记录，须在同一PowerShell终端执行：
+
+```powershell
+$env:LIANZHI_DATA_DIR = Join-Path $PWD '.test-runtime/browser'
+.\.venv\Scripts\python.exe -m backend
+```
+
+当前8000已有服务，勿重复启动；浏览器刷新后打开“我的知识作品”。`.test-runtime/browser`虽沿用历史目录名，当前保存用户旧记录，不得按临时夹具清理。源码默认路径未修改；不设上述环境变量会进入默认目录。没有调用收费AI或更改凭据/业务数据。
+
+---
+
+# 2026-10-18 视频上传64 KiB专项诊断与最小修复（历史交接）
+
+本轮依据用户粘贴的专项任务，先读AGENTS/HANDOFF/README/demo README、架构/复现/ASR、相关前后端与测试，再建立真实HTTP复现后修改。保留此前未提交修改和所有历史章节；sources/只读，未触碰正式用户数据库/媒体、模型调用/Key或视觉文件。默认沙箱持续setup refresh had errors；经沙箱外执行只读/测试后可工作。浏览器连接工具同样启动失败，随后用已有Playwright和Chromium headless完成真实页面测试，无新增安装/模型下载/收费请求（历史收费仍1次，最多3次授权不续期）。
+
+## 第一阶段诊断结论与证据
+
+- 实际链路：demo/js/api.js的startVideo→fetch('/api/videos', File, Content-Type:video/mp4, X-File-Name/X-Request-Id)→本机Uvicorn→main.py local_only中间件→video_routes.py request.stream→UUID临时文件→受控PyAV探测→媒体改名/SQLite→独立POST transcribe返回202→后台受控ASR子进程→GET轮询→人工校对/确认→SQLite。视频不经过JSON/Base64/multipart，没有表单boundary、字段解析上限或SpooledTemporaryFile阈值。启动入口未见Nginx/Vite/pywebview额外代理，也没有桌面打包配置。
+- 已证实缺陷：main.py原只豁免精确/api/videos，带尾斜杠/api/videos/先进入通用请求体缓冲，累计size > 65536时返回413，error.code=INPUT_LIMIT、message=“请求超过 64 KiB。”。因此恰好65536可过中间件，65537立即被拒，尚未进入上传校验或ASR。小于等于65536的尾斜杠请求最后被静态挂载返回405，未自动307跳转。不是Uvicorn的文件限额。
+- 未证实部分：当前正式前端发送无尾斜杠路径；检查时8000端口无监听，无法还原用户原现场URL/旧服务代码。不能断言尾斜杠就是原现场唯一原因，也不能断言旧进程未重启。当前源码正常路径修复前就能接收1MiB。
+- 最小方案及风险：增加同一上传函数的/api/videos/别名，并使中间件精确豁免两个已注册路径；继续由上传处理按声明长度和实收流计数限制100MiB。新别名从原405/413变为合法上传；若误把整个/api/videos前缀豁免会放大JSON限制，因此新增测试专门验证子路径与普通命令仍413。
+
+实际Uvicorn+httpx修复前后（每行均对两路径测试，无隐私夹具，raw请求体无额外封装）：
+
+| 文件/请求体字节数 | 原/api/videos | 原/api/videos/ | 修复后两路径 |
+| --- | --- | --- | --- |
+| 32768（32KiB） | 201 | 405 HTTP_ERROR | 201 |
+| 64512（63KiB） | 201 | 405 HTTP_ERROR | 201 |
+| 65536（64KiB） | 201 | 405 HTTP_ERROR | 201 |
+| 65537（64KiB+1） | 201 | 413 INPUT_LIMIT | 201 |
+| 66560（65KiB） | 201 | 413 INPUT_LIMIT | 201 |
+| 131072（128KiB） | 201 | 413 INPUT_LIMIT | 201 |
+| 1048576（1MiB） | 201 | 413 INPUT_LIMIT | 201 |
+
+初次诊断命令通过Python调用tests.test_process.server，在新TemporaryDirectory内启动Uvicorn，以tests.test_video.make_mp4生成MP4，再加合法free box得到精确字节数；依次httpx.post两路径并输出status/error/history。无重定向，warning级别后端日志为空；不是已采集生产访问日志。修复后持久化回归命令与矩阵保存在tests/test_upload_http.py及.test-runtime/upload-regression-20261018/test_upload_http_boundaries_an0/boundary-evidence.json。
+
+## 修改与保留的安全边界
+
+- 生产逻辑只改backend/main.py一个条件、backend/video_routes.py一个路由装饰器；别名不重复显示OpenAPI条目。正式前端调用保持原样。
+- 上传仍100MiB=104857600字节、有效MP4/音轨、0<时长≤180秒；不会把普通命令64KiB改成无限。实际二进制魔数/PyAV探测、UUID安全路径/独占写入、单上传锁、60秒上传超时、错误清理与磁盘失败提示均保留。转写提交与推理原本已分离，无新队列或业务重构。
+- 新增tests/test_upload_http.py：真实HTTP精确边界、重试幂等、其他路径64KiB保护、Origin、实际100MiB及100MiB+1分块体、无效/空文件/无音轨/multipart拒绝、真实socket连接中断清理和锁释放。tests/test_video.py新增模拟ENOSPC磁盘满503及无残留断言。
+- 新增tests/browser-video-upload.cjs，tests/test_asr_real.py增加显式启用的真实浏览器测试；新增scripts/make_upload_test_video.py离线生成无隐私中文H.264/AAC MP4，不覆盖已有文件。复用本机已有Huihui语音，不下载音色；Node/浏览器路径仅由测试环境指定，源码不含开发者个人绝对路径。
+- 更新根README、AGENTS、docs/ARCHITECTURE、ASR、REPRODUCE、DEMO和本既有HANDOFF。AGENTS顶部补当前真实ASR状态及本次授权，保留下方历史门槛。SQLite schema/历史记录/LLM调用/密钥/前端动画视觉均未修改。
+
+## 实际测试、失败记录与环境
+
+Windows11/Python3.12.14，FastAPI0.143.3、Starlette1.8.0、Uvicorn0.54.0、PyAV16.1.0，Chromium148.0.7778.96（已有headless shell），small固定版本/CPU INT8。
+
+1. `.venv/Scripts/python.exe -m pytest tests/test_upload_http.py -q --basetemp=.test-runtime/upload-http-20261018`：初版3项通过；后续同测试增加精确100MiB成功断言，在完整回归中通过。两个路径实际无Content-Length分块上传104857600字节201、104857601字节413 FILE_TOO_LARGE。普通命令/视频子路径65537字节413；跨站403；空内容400 EMPTY_FILE；无效内容422 UNSUPPORTED_MEDIA；无音轨422 NO_AUDIO；multipart415。中断连接无法取得客户端响应状态，实际确认临时文件消失、无数据库记录、后续上传201。
+2. 无隐私测试视频：原创概率讲解文本由本机Windows Huihui离线合成、纯色画面，H.264/AAC/MP4含音轨。正式探测19.4秒、165610字节；素材生成脚本已实际运行，输出.test-runtime/upload-browser/reproducible-speech.mp4；不使用或修改根目录用户测试.mp4。
+3. 已有真实CPU及静音测试命令：设置LIANZHI_ASR_TEST_VIDEO指向合成视频，运行`python -m pytest tests/test_asr_real.py -q -s --basetemp=.test-runtime/upload-asr-browser-20261018`：两项已有测试通过，新浏览器初版断言失败。真实CPU 5段、含69个中文字符，模型加载+推理5.139秒、峰值工作集696.0MiB，HTTP/正式前端脚本校对及实际服务重启一致；静音真实模型返回NO_SPEECH。
+4. 浏览器工具失败及修复测试取证：CUA初始化setup refresh had errors；Playwright默认期望Chromium1234文件不存在，复用本机已安装1223目录的Chromium148成功，无下载。初版postDataBuffer/request.sizes不能可靠报告File体，两个取证断言失败；异步读取response.json又遇DevTools缓存驱逐，均未改业务代码或放宽预期。最终改为记录Network方法/路径/状态/Content-Type，并以服务端流式计数核对文件字节。浏览器未暴露Content-Length，证据记null，不伪造请求头。
+5. 最终真实浏览器命令：设置LIANZHI_ASR_TEST_VIDEO为上述无隐私MP4、LIANZHI_BROWSER_TEST=1、NODE_PATH为本机已有Playwright包目录、LIANZHI_BROWSER_EXECUTABLE为已有Chromium；`python -m pytest tests/test_asr_real.py -k real_browser -q -s --basetemp=.test-runtime/upload-browser-verified`：**1 passed, 2 deselected in16.72s**。正式页面先上传伪MP4返回422并展示错误；静音MP4上传201后ASR失败，页面可见NO_SPEECH；正常MP4上传201，文件/实收均165610字节，ASR5段、5.14秒、峰值696.4MiB。编辑保存/确认、原稿不变、页面刷新、停后端/新进程/新浏览器读回均通过，page_errors=[]。截图已实际查看，见.test-runtime/upload-browser-verified/test_real_browser_upload_confi0/browser.png，同目录browser-evidence.json只含汇总、不含转写正文。
+6. `.venv/Scripts/python.exe -m pytest -q --basetemp=.test-runtime/upload-regression-20261018`：59 passed, 3 skipped in24.17s。随后新增ENOSPC磁盘满独立用例，最终完整命令`.venv/Scripts/python.exe -m pytest -q --basetemp=.test-runtime/upload-final-regression-20261018`：**60 passed, 3 skipped in25.52s**（三项真实模型/浏览器需显式启用，已分别执行上文测试）。全套含知识挑战/Stub追问、MockTransport失败、密钥生命周期、SQLite/进程重启及视频兼容，未调用收费AI。新浏览器脚本node --check、backend/tests/新素材脚本compileall通过；git diff --check无空白错误，保留LF/CRLF提示。
+7. demo目录运行`Get-ChildItem tests/test-*.js | ForEach-Object { node $_.FullName; if ($LASTEXITCODE -ne 0) { throw $_.Name } }`：10个脚本exit0，含P0/视频/密钥/音效/抽题取消；部分旧测试仅打印，不能当全部规则验收。火焰/罗盘真实视觉本轮未单独验证，未改其代码。
+
+## 未验证与交付边界
+
+- 真实正式页面+本地ASR+SQLite闭环本轮已验收；原用户报错现场URL/进程仍未还原。若现有服务继续报64KiB，请保留Network原URL/响应，确认重启加载最新代码，不应继续盲目调大上限。
+- 仓库尚未有Windows桌面封装/Release候选版，本轮未修改打包路径，不能声称打包版兼容；仅已验证Windows本机Web开发入口。新电脑可按REPRODUCE/ASR准备依赖模型并生成无隐私素材，其他硬件/浏览器/GPU未验。
+- ASR每次加载模型、100MiB写盘及15秒媒体探测/60秒上传仍有性能边界；本轮不是3分钟整段性能基准。未人工测准确率或时间戳偏差、真实扬声器听感、复杂视频格式；无语音及失败仍须保留失败状态。
+- 正式用户数据库/旧视频未写入；兼容验证使用隔离测试库和既有迁移用例，未冒称对用户全部历史记录逐条核验。无Git提交/推送、无发布。完成本轮后暂停等用户确认。
+
+---
+
+# 2026-10-18 真实本地视频转写闭环（历史交接，内容保留）
+
+本轮最新用户任务明确授权MP4本地ASR、分段校对确认、SQLite和重启读取；另已明确授权仅下载Systran/faster-whisper-small固定版本。遵循先独立脚本真实验证再接FastAPI。此前“ASR未实现/仅Mock/Schema v1”是历史任务状态，当前以本节、README和docs/ASR.md为准；未修改旧DEC状态或AGENTS.md，不据此批准云端AI复盘等未做范围。
+
+## 实际实现与修改文件
+
+1. 后端：修改backend/config.py、db.py、main.py、schemas.py、services/asr.py；新增backend/asr_worker.py、process_guard.py、video_db.py、video_routes.py、services/video.py。视频上传按流100MiB上限，真实PyAV探测容器/视频帧/音轨/180秒限制，随机UUID安全路径；云端/密钥从不传给媒体子进程。单任务CPU INT8在独立子进程，提交/查询HTTP不等待整段推理；Windows Job Object随父进程退出回收，600秒推理/15秒探测/60秒上传超时。失败保存明确状态、无Mock替代或自动重试。
+2. 前端：demo/js/store.js、api.js、app.js、views.js。复用视频页/表格/播放器/档案风格；真实HTTP模式选择MP4、上传/启动、处理状态、真实分段原文/编辑、保存草稿、确认快照、历史和列表重新打开；点击时间戳设置currentTime。未改变file://静态Mock。局部秒→毫秒格式转换，不修改旧fmtT或Mock时间轴。轮询结果仍running时不重渲染播放器；切页停止定时查询，旧回调按视频ID校验，不干扰挑战绘制。
+3. 工程：新增requirements-asr.txt（包含基础requirements、固定ASR依赖）、scripts/download_asr_model.py、scripts/asr_probe.py；.env.example补LIANZHI_ASR_MODEL_DIR说明。基础requirements.txt沿用上一轮，无隐式模型下载。
+4. 测试：新增tests/test_video.py（10项）、test_process_guard.py（1项）、test_asr_real.py（2项显式启用的真实测试）、frontend-video-http.cjs、demo/tests/test-video.js。现有挑战/密钥/音效等测试保留。
+5. 文档：README.md、demo/README.md、docs/ARCHITECTURE.md、REPRODUCE.md、THIRD_PARTY.md、DEMO.md、SECURITY.md、docs/00–05增加当前事实覆盖说明，新增docs/ASR.md，更新本HANDOFF；保留历史与未批准DEC。
+
+## 引擎、模型与环境
+
+Windows11/Python3.12.14，Core Ultra7 251HX，18逻辑CPU、物理内存约15.37GiB；RTX5060 Laptop 8151MiB已检测，但本轮**仅CPU**、没有CUDA安装或GPU性能结论。
+faster-whisper1.2.1、CTranslate2 4.8.3、PyAV16.1.0，其他精确版本见requirements-asr.txt；PyAV wheel含FFmpeg库，不依赖系统ffmpeg/ffprobe。实际安装新依赖时引入httpx2等，pip check通过，原LLM适配继续httpx0.28.1，原45项回归均保留。
+唯一主模型Systran/faster-whisper-small，固定536b0662742c02347bc0e980a01041f333bce120，MIT，官方Hugging Face，公开文件486,215,847字节（约486MB）；实际下载后校验model.bin SHA256=3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671。默认models/faster-whisper-small被Git忽略，目录可用启动环境LIANZHI_ASR_MODEL_DIR指定，但不会接受不同权重冒充该版本。未下载其他大型模型；VAD来自引擎包自带Silero组件。未对FunASR做实际对比，选择理由是已验证CPU路径和最小部署成本，不宣称识别质量胜出。
+
+## API、数据与隐私
+
+新增GET/POST /api/videos、GET /api/videos/{id}、GET /api/videos/{id}/media（Range）、POST /api/videos/{id}/transcribe、POST /api/videos/{id}/transcript。上传为raw video/mp4+编码文件名/请求ID头，JSON命令沿用64KiB、版本/幂等/来源限制。状态uploaded/running/transcribed/failed/interrupted；无引擎、模型缺失、无音轨、格式/时长/解码/推理/写入/超时/空语音均显式失败。缺模型不阻止应用启动，不自动下载。停止/重启不自动重跑。实际受控子进程当前只支持Windows，其他系统不能宣称已验收。
+SQLite schema v2：v1升级前保留一次app.pre-video-v1.db（不覆盖旧备份），增量事务新增videos和video_commands，原挑战四表/内容不重写。视频原件以videos/<UUID>.mp4存应用数据目录；只记录相对路径。ASR原稿独立version_id不可覆盖，draft为同序ID的编辑文字，versions追加完整不可变确认快照（UUID/序号/confirmed_at/based_on）；保存不同文字即撤销当前confirmed_version_id，历史保留。所有真实时间戳均秒。并发旧revision返回409，前端保留编辑；同命令重复不再识别/造重复确认快照。
+音频仅进程内存解码，不永久写WAV；个人视频/转写/数据库/模型不入Git、不发云端。本轮视频删除/清理未实现，UI不会给持久化视频展示只改内存的假删除按钮。刷新可重新打开已入库/已保存稿，未保存编辑仍只在内存。未来AI必须引用不可变确认稿UUID、另获文字外发同意，并因当前稿修改/确认指针改变而将旧报告标过期；本轮无真实或Mock报告写入该路径。
+
+## 实际验证与证据
+
+用户将本轮新录制测试.mp4放项目目录并授权本地验收；源文件未修改，测试只复制到隔离目录；未将正文输出聊天、测试快照或提交文档。
+- 最小脚本在API开发前实际执行：20.196533秒、18,716,423字节新MP4，真实视频帧/音轨；small/CPU INT8（无VAD初验）7段，加载+识别14.728秒，峰值进程工作集960.8MiB，输出仅.test-runtime/asr-validation/probe-1.json。
+- 最终正式路径：同一新视频，small/CPU INT8/4主引擎线程/VAD，6段、含30个中文字符；加载+识别5.493秒，ASR子进程峰值工作集695.5MiB。自动化HTTP提交至前端校对保存约7.078秒，包含轮询/脚本动作，不能当人工操作速度或统一冷启动基准。
+- 最后实际命令：设置LIANZHI_ASR_TEST_VIDEO为隔离视频路径，运行 .venv/Scripts/python.exe -m pytest tests/test_asr_real.py -q -s --basetemp=<全新隔离目录>：**2 passed in14.31s**。第一项真实HTTP上传→CPU后台识别（期间health可响应）→正式前端api/app/views代码加载/修改/保存草稿/确认（DOM替身）→SQLite→停后端/新进程→新的前端运行环境读回，原ASR不变、版本和媒体Range均通过；第二项实际静音MP4运行同模型，明确NO_SPEECH，没有用固定文字填充。
+- 汇总证据不含正文：.test-runtime/asr-acceptance-358efdad/test_real_cpu_video_ui_confirm0/asr-evidence.json；该目录的数据库/媒体均为私有隔离测试数据，不提交。
+- 常规 .venv/Scripts/python.exe -m pytest -q：**56 passed, 2 skipped in13.59s**；默认跳过两项显式真实模型测试，不自动下载/读用户视频。已单独运行上述两项通过，不把skip当通过。
+- demo目录执行所有tests/test-*.js：**10个脚本exit0**；新视频脚本覆盖选择/raw上传/防重复、轮询切页、未变化查询不重建播放器、编辑跨页、确认/原稿、秒单位格式、seek赋值；旧部分脚本仅打印，不能称所有业务验收。新增真实HTTP前端脚本还用于上述真实CPU测试。
+- pip check通过；全部demo/js/*.js node --check、Python compileall通过，git diff --check最终通过（LF/CRLF提示保留）。
+- 模拟异常/真实容器单测：无音轨、伪装扩展名/损坏内容、181秒拒绝、流式超限、路径穿越、文件写失败、缺模型/引擎、重复上传/命令、全空确认/超长/旧revision、确认历史保留、推理失败、重启中断；推理替身明确使用test-substitute版本，不把它算真实模型证据。
+- Windows Job Object实际启动自有sleep子进程，硬终止其父进程后等待确认子进程已退出；不操作其他用户进程。
+- 历史兼容：只读SQLite连接备份 .test-runtime/browser/app.db 至 .test-runtime/asr-migration-2d4cb16b，副本v1→v2后3条历史挑战(id,data)逐字一致，v1备份存在，源库未写入。正式用户服务未被擅自终止/迁移，重启新代码时才升级其数据目录。
+- git check-ignore确认源测试.mp4、models/model.bin与.test-runtime结果被忽略，Git跟踪列表无mp4/模型/数据库；无提交/推送。未发ASR云端或LLM请求，历史收费累计仍1次（上限3次授权不续期）。
+
+## 本轮修正过的问题
+
+初次PyAV19.0.1与faster-whisper1.2.1不兼容（metadata_errors被删除），锁16.1.0后真实验证通过；媒体异常在PyAV16不一定是OSError，worker显式归类FFmpegError；测试媒体封装要在写头前建好所有轨道，夹具修正后通过。新ASR秒单位与旧fmtT毫秒不符，以及running轮询重建播放器，均新增失败断言后作局部修复并通过。未修改旧Mock协议或动画。
+
+## 火焰保护、未验证和验收入口
+
+本轮基线8个文件（demo/index、CSS、compass.js、draw.js及prototypes/flame-compass四文件）SHA256逐一相同；beginDraw编排与原实现一致，音效/计时/取消回归通过。当前checkout正式入口仍加载compass.js，独立火焰文件位于prototypes；未擅自集成或覆盖，也不凭用户描述冒称另一份ZCode集成已在这里。真实浏览器火焰观感未验收。
+浏览器工具再次初始化失败：node_repl kernel exited，windows sandbox orchestrator_helper_report_read_failed，setup_error.json解析失败。因此真实点击、375/768/桌面视觉、真实播放器/音频/seek尚未验证；DOM替身与Range测试不等于浏览器播放通过。
+没有逐字人工参考稿，未计算中文CER，未人工测时间边界偏差；只验证含中文、顺序/边界合法、可编辑保存。弱音/VAD漏字、同音词、专有名词等仍需用户校对；不编造该样片具体错词或准确率。GPU、其他机器/系统、3分钟整段性能未验。公开FLEURS中文CC-BY-4.0资源链接及原创可自由朗读稿在ASR.md；本轮只核查公开包元数据，不下载整份语料，私人视频不能随GitHub分发。
+新电脑按requirements-asr.txt安装、运行download_asr_model.py准备固定模型；应用仓库不携带开发者凭据/私人视频/模型缓存。当前开发机依赖与模型已准备。用户需重启正式后端加载本轮代码，再从“视频复盘”选择测试.mp4验收；后台服务未被我擅自杀停，默认用户DB升级发生在该次启动。下一阶段仅建议用户核对识别和时间戳、确认浏览器交互；云端AI复盘须另轮授权。本轮到此暂停。
+
+---
+
+# 2026-10-18 API Key 安全持久化与自动恢复（最新）
+
+本轮按用户明确授权，仅优化密钥生命周期、设置页小范围交互与安全保护；以下旧章节中“Key仅进程内存、重启需重填”是当时状态，现以本节和docs/SECURITY.md为准。未改变旧DEC审批状态，未接ASR或其他功能。
+
+## 实际实现与文件
+
+- 新增backend/services/credentials.py：独立凭据读/存/删/是否配置服务，直接构造并校验官方keyring.backends.Windows.WinVaultKeyring，固定local machine持久化（值2），不调用后端自动发现，不允许第三方或明文降级；凭据按数据目录+端点哈希独立标识。Windows同一用户、同一路径重启可恢复；改数据目录不共享。不同端点不沿用旧内存Key。
+- backend/main.py、services/llm.py：lifespan在目录锁内恢复非敏感配置/安全凭据；设置/删除共用原模型锁；删除先清内存、停用记住，再尝试系统删除；失败显式提示。启动不发测试请求，现有Prompt、同意门禁、live/example/mock、请求预算、模型调用业务不改。
+- backend/schemas.py：设置新增可选remember_key、SecretStr长度上限2048；状态只返回配置/来源/是否保存/错误，不返回Key。旧客户端可不传新字段，首次仍只会话使用。
+- demo/js/views.js、app.js、api.js：保留设置布局，增加记住选项、已保存/来源和错误；输入框标注输入即替换，同端点空值保留，提交立即清空且请求后释放临时body.api_key；删除防重复。取消勾选并应用会删除当前端点凭据、保留本次内存Key，按钮同时清会话和当前端点凭据；页面明确说明环境Key重启仍会恢复。
+- requirements.txt：实际安装keyring25.7.0、pywin32-ctypes0.2.3（仅Windows）；传递依赖jaraco.classes3.4.0、jaraco.context6.1.2、jaraco.functools4.6.0、more-itertools11.2.1，锁定实际版本。
+- 新增tests/test_credentials.py（23项实际用例）、demo/tests/test-credentials.js；tests/test_process.py扩展隔离环境和日志捕获，用于实际HTTP进程测试。
+- 文档：README.md、demo/README.md、.env.example、docs/ARCHITECTURE.md、REPRODUCE.md、DEMO.md、THIRD_PARTY.md、02-技术方案与运行安全.md，新增docs/SECURITY.md以及本HANDOFF；保留历史记录，不修改已批准业务决策。
+
+## 配置与安全边界
+
+首次配置可选记住，后端系统凭据保存成功并读回校验才标已保存。非敏感配置原子写数据目录llm-settings.json，仅mode/endpoint/model/remember_key，无Key；Key不进SQLite、浏览器Store/localStorage/sessionStorage或普通日志。未发现旧版明文持久化代码，没有读取/迁移/删除用户旧Key。
+启动优先级：LLM_API_KEY > 当前端点安全凭据 > 未配置；mode/endpoint/model分别由显式环境变量覆盖保存值，页面显式输入可替换当前会话。环境变量未由删除按钮修改，重启若仍设置会恢复，界面及文档均提示。
+保存/读取失败不降级明文，保留本次内存Key并显示错误；保存失败禁用自动恢复，旧凭据可能残留，需重试/删除。删除失败也不宣称已删除；若非敏感配置文件亦不可写，旧记住状态可能仍在磁盘，明确提示。无Key/存储不可用仍可启动和本地学习/保存/看example。
+默认仅允许api.deepseek.com的HTTPS/443及空路径或/v1，禁止userinfo/query/fragment/反斜杠/空白。其他主机须操作者启动前通过可信LLM_BASE_URL指定，网页不能扩大主机范围。默认监听127.0.0.1不变；设置POST只收JSON，Origin精确匹配/null拒绝，API拒绝Fetch Metadata cross-site/same-site，不开放CORS。本机CLI无来源头仍可用，这不是同一Windows用户下的恶意程序隔离。
+
+## 实际测试与证据
+
+Windows11/Python3.12.14/Node24.18.0，本轮不使用真实Key、不调用收费服务，累计历史真实请求仍1次、最多3次授权不变。
+- .venv/Scripts/python.exe -m pytest -q：45 passed，1条既有Starlette/httpx弃用警告。
+- .venv/Scripts/python.exe -m pip check：No broken requirements found。
+- 在demo目录运行Get-ChildItem tests/test-*.js | ForEach-Object { node $_.FullName; if ($LASTEXITCODE -ne 0) { throw $_.Name } }：9个脚本均exit0；旧部分脚本仅打印，不当作所有规则验收。
+- 全部demo/js/*.js执行node --check通过；git diff --check通过（仅LF/CRLF提示）。
+- 最终变更文件常见sk-/Bearer密钥模式扫描未发现匹配；仅使用明确的假测试token。该模式扫描不是对历史仓库任意格式秘密的完整证明。git diff确认backend/db.py无改动；未提交/推送。
+- 真Windows系统凭据：临时目录派生随机隔离凭据名，保存假token→关闭进程→新HTTP进程恢复→替换假token→关闭/重启→读取新值→删除→关闭/重启→未配置；共四次服务启动，live_requests一直0。finally删除测试凭据并确认不存在，不触碰用户凭据。
+- 覆盖环境优先、取消记住删存储但留会话、系统读取/保存/删除失败、配置文件失败、无明文降级、格式错误、坏存储值、不同端点不串Key、401认证失败不回显/不重试、Origin/Fetch Metadata/Content-Type保护。MockTransport验证替换后Authorization使用新值、删除后无法再发调用。日志/SQLite/配置检查不含两种测试token原文。
+- 正式前端脚本+DOM/HTTP替身验证记住参数、立即清空输入、状态/错误转义、重复删除防护、页面/Store/localStorage无token。现有挑战HTTP/Stub/MockTransport/SQLite重启、视频Mock版本回归通过；不代表真实视频模型已实现。
+- 首轮集成测试扫描Windows锁文件权限失败，调整为日志/数据库/配置扫描后通过；首次从根目录跑全部Node测试导致旧test-sound相对路径失败，改按README从demo运行9个全过，未改音效业务/旧测试。
+
+## 未验证、兼容风险与下一步
+
+浏览器工具此前因trusted Node/Windows sandbox helper初始化失败，真实设置点击/视觉/刷新本轮未验收；Node替身不是浏览器通过。未做Windows整机重启、其他机器/系统、新venv完整重装或真实收费认证请求；本轮真实服务认证失败仅MockTransport。Windows安全后端已经实际写读/跨进程恢复成功，其他系统只允许会话并显式报存储不可用。
+SQLite Schema仍v1，无表/列变动、用户记录覆盖/删除；未修改backend/db.py、模型Prompt、音效、抽题或挑战流程。自定义endpoint现在必须在启动环境允许，旧任意HTTPS端点输入会被拒并明确提示；/v1与不带路径是独立凭据。
+同Windows用户的恶意程序可能读该用户系统凭据；系统保管不等于应用进程隔离。应用运行时若在凭据管理器外部手工删除，不会同步擦除进程内存，请用应用删除或重启。仓库可以复现应用，不代表会携带开发者本机保存的密钥。评委需要使用自己的凭据。
+工作区已有上一轮UI精简改动和未跟踪output/，本轮保留；未提交/推送Git、未启动新功能。下一步仅由用户重启正式服务加载本轮代码，再在工具可用时验收设置真实交互；本轮完成后暂停。
+
+---
+
+# 2026-10-18 设置与挑战档案精简（本轮最新）
+
+## 授权与实际改动
+
+本轮仅按用户要求精简音量控件与普通档案展示，沿用Ponytail最小改动；不改挑战流程、抽题、模型接口/Prompt、SQLite数据层或音效业务逻辑。
+- demo/css/app.css：仅新增 #sound-volume 专用规则，宽度100%、最大240px、取消通用input的scale(1.25)、块级显示及局部边距。其他输入/滑动条样式不变。
+- demo/js/views.js：音量容器允许收缩，去除原全宽内联样式，补label关联；默认25%、百分比、范围0–100、持久化与音效事件不变。档案卡标题改“讲解文案”，remoteRecordText增加includeOrigin参数；普通详情传false，仅隐藏“追问来源”JSON，保留原始解释、问题回答、修正历史、上方知识点/更新时间，以及独立live/mock真实性徽标。Markdown导出沿用默认true，继续带来源元数据；主动展开导出预览仍可见这些审计字段。
+- demo/tests/test-settings-records.js（新增）：局部CSS声明、0/37/100音量/百分比、偏好重载、Tick/Lock合成调用、历史原稿特殊字符/多次修正/时间、live/mock/未调用标识、example标识和导出元数据不变。
+- tests/frontend-http.cjs：更新卡片标题断言，新增普通详情不含来源区且保留mock标识断言。
+- README.md、demo/README.md、docs/DEMO.md、HANDOFF.md：同步本轮展示行为和验证边界。
+
+“追问来源”正文与真实性徽标是独立代码片段；本轮不删除徽标，不让Mock或预存案例冒充真实AI。来源仍保存在API/SQLite和Markdown导出中。未覆盖或删除任何历史原稿/修正/记录。
+
+## 实际测试（2026-10-18）
+
+- 新测试先执行失败（原CSS无240px上限），修改后通过。
+- 项目根目录 .venv/Scripts/python.exe -m pytest -q：22 passed，1条原有Starlette/httpx弃用警告。包含实际HTTP子进程、新建/保存、重启读回。
+- demo目录运行 tests/test-*.js：8个脚本均exit0；部分历史脚本仅诊断输出，不称全部业务规则验收。
+- 新音量测试：实际音量input事件经原SoundFx逻辑，在0/37/100检查百分比与localStorage；重建前端运行环境后恢复数值。WebAudio使用替身，0不创建播放，37/100下Tick与Lock均完成合成并触发播放源。不是扬声器试听或真实浏览器音频测试。
+- 档案Node测试：live、mock、未调用三类记录正文无“追问来源”/prompt_tokens；原解释、特殊字符转义、两个修正版本及更新时间保留；记录对象逐字序列化不变；导出保留origin；首页example预存标识保留。均为内存DOM。
+- 历史SQLite真实兼容检查：以只读连接备份 .test-runtime/browser/app.db 至独立 .test-runtime/ui-records-随机ID；副本2条历史记录通过实际HTTP逐字段读取；新建一条解释后实际关闭/重启隔离服务，新旧记录均完整读回。正式前端API与视图读取副本中新旧记录通过（内存DOM）。sqlite_master全部结构定义及PRAGMA user_version在初始化/保存/重启前后相等，版本仍1。源数据库未写入/删除。检查脚本位于.test-runtime/ui-records-check.py与ui-historical-read.cjs，不提交用户数据。
+- git diff确认backend/、sound.js、app.js未改，本轮无模型请求/依赖安装/服务端Schema变更。
+
+## 未验证与风险
+
+浏览器工具两次初始化失败：trusted Node进程退出，随后复现windows sandbox helper setup refresh had errors。因此375px、768px、桌面实际布局/溢出/滑动手感、真实浏览器刷新与扬声器试听均未验收；CSS范围/响应式声明与音量/重载逻辑通过测试，不等于浏览器视觉通过。
+兼容性风险低：只改展示，旧记录不迁移；可选来源仍支持未调用状态。导出仍带技术来源信息是为保持追溯，不是普通正文回归。
+下一步仅在浏览器环境恢复后人工验收三个宽度、音量0/中间/100与刷新；本轮到此停止，不启动其他功能。
+
+---
+
 # 2026-10-17 炼知MVP工程阶段交接（当前事实）
 
 ## 授权与完成边界
@@ -271,3 +509,4 @@ P0 修复后的状态归属：`S.ch.draft` 保存未提交解释/回答/修正�
 | 日期 | 试验 | 状态 |
 | --- | --- | --- |
 | 2026-10-17 | **炼知火焰罗盘独立 Demo**（`prototypes/flame-compass/`，4 文件自包含）：三态火焰罗盘（待机微燃/抽题升腾/锁定回落，参考用户三态示意图），方案 A=SVG 柔和火焰（推荐集成）、方案 B=轻量粒子（上限 90），控制面板含强度/速度/动效开关，状态机与抽题节奏复刻正式 demo 但不连接 Store。IAB 内核实测三态联动/控件/重复点击/重置/375px 通过；真实 rAF 观感与美学待人工审阅。**未集成正式前端**；正式 `demo/` 18 个文件 SHA-1 逐一比对（试验前后）零改动。下一步：等用户审阅 Demo 后再讨论是否集成及选型。 |
+| 2026-10-18 | **火焰罗盘 V2 质感升级**（仍为独立试验，`prototypes/flame-compass/`）：新增①多谐波火舌（每舌双频摇摆+低频伸缩+同源横移，相位确定性错开，焰心反相微摆，根部锚定）；②外焰/内焰/环境辉光分层节奏（9s 全局呼吸、11s 辉光低频呼吸、锁定一次性 glow 脉冲 650ms）；③余烬层（canvas 上限 26，两火焰方案共享，待机 ~1 抽题 ~5）；④页内 V1/V2 切换（V1 代码保留即回退）；⑤document.hidden 暂停 rAF。修复 SVG 方案余烬被条件短路不生成的 bug。测试（IAB+泵帧钩子）：火舌去同步、余烬档位、抽题升腾/锁定回落、连抽 10 次无叠加、跳过/重置/动效关、375/768 无溢出全过；真实 rAF 观感/CPU/reduced-motion CSS 分支/美学认可标注人工。**未集成正式 MVP**；正式 demo/ 23 文件 SHA-1 试验前后零改动。等用户审阅。 |

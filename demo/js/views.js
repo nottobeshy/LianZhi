@@ -434,6 +434,7 @@ function reviewHistoryHtml(review = S.rv, selectable = true) {
 }
 
 function vReview() {
+  if(AppAPI.enabled)return vLocalReview();
   const v = MOCK.video, r = S.rv;
   let body = '';
   if (r.step === 0) {
@@ -512,6 +513,80 @@ function vReview() {
   return rvStepsHtml() + '<div class="kc-wrap">' + body + (r.step >= 2 ? reviewHistoryHtml() : '') + '</div>';
 }
 
+const fmtVideoTime = seconds => fmtT(Math.round(seconds * 1000));
+
+function videoTranscriptText(record) {
+  if(!record.raw_transcript)return '状态：'+record.state+'\n'+(record.error?.message || '尚无转写结果。');
+  const lines=segments=>segments.map(s=>s.segment_id+' '+fmtVideoTime(s.start)+'–'+fmtVideoTime(s.end)+'：'+s.text).join('\n');
+  return '## 原始ASR稿（不可覆盖）\n\n'+lines(record.raw_transcript.segments)+'\n\n## 当前保存稿\n\n'+
+    lines(record.raw_transcript.segments.map((s,i)=>({...s,text:record.draft[i].text})))+
+    '\n\n'+record.versions.map(v=>'## 确认稿 v'+v.version+' · '+v.confirmed_at+'\n\n'+lines(v.segments)).join('\n\n')+
+    '\n\n来源：本地 faster-whisper small / CPU INT8；时间单位为秒。\nAI文案建议及用户编辑版请打开视频记录查看；用户确认仅代表完成校对。';
+}
+
+function localVideoReviewHtml(v,l) {
+  const confirmed=!!v.confirmed_version_id && !l.dirty;
+  const model=S.backend.llm,configured=model?.configured || model?.mode==='mock';
+  const review=l.reviews.find(r=>r.id===l.reviewSelected);
+  const categories={knowledge:'知识',logic:'逻辑',expression:'表达'};
+  return `<div class="kc-card"><div class="kc-h">AI 复盘与双版本文案</div>
+    <p class="kc-mut">只发送你已确认的文本到 ${esc(model?.endpoint || '当前模型服务')} · ${esc(model?.model || '未配置模型')}，不发送原始视频。模型建议可能有知识性错误，需要人工复核；不是事实核查。</p>
+    ${!confirmed?'<p role="status">请先校对并确认当前文案；旧复盘仅供历史查看。</p>':''}
+    ${!configured?'<p role="status">尚未配置模型与 API Key，请在设置中配置。<button class="kc-btn sm" data-action="nav" data-view="settings">打开设置</button></p>':''}
+    <label><input type="checkbox" id="rv-review-consent" ${l.reviewConsent?'checked':''} ${l.reviewBusy?'disabled':''}> 我同意将确认后的文案发送至当前模型服务，并自行复核建议。</label>
+    <p><button id="rv-ai-review-btn" class="kc-btn primary" data-action="rv:ai-review" ${!confirmed || !configured || !l.reviewConsent || l.busy || l.reviewBusy?'disabled':''}>${l.reviewBusy?'正在处理，请等待…':'AI 复盘并优化文案'}</button></p>
+    ${l.reviewBusy?'<p role="status">正在处理；原文保留，请勿重复提交。网络失败不会自动重试收费请求。</p>':''}
+    ${l.reviewError?`<div class="kc-errbox" style="display:block" role="alert">${esc(l.reviewError)}</div>`:''}
+    ${l.reviews.length?`<details><summary>复盘记录（${l.reviews.length}）</summary><div class="kc-row">${l.reviews.map(r=>`<button class="kc-btn sm" data-action="rv:review-select" data-id="${esc(r.id)}">${esc(r.created_at)} · ${esc({running:'正在生成',succeeded:'已生成',failed:'生成失败',interrupted:'已中断'}[r.state])}${r.stale?' · 已过期':''}</button>`).join('')}</div></details>`:''}
+    ${review?`<p id="rv-ai-review-status" role="status">${l.dirty || review.stale?'历史复盘已过期（当前文案已改变）':'绑定当前确认版本'}</p>${review.error?`<p role="alert">${esc(review.error.code)}：${esc(review.error.message)}</p>`:''}`:''}
+    ${review?.state==='succeeded'?`${originTag(review.origin)}
+      <div class="kc-grid" style="margin-top:14px">
+        <div><h3>原始版本 · 用户确认稿</h3><textarea id="rv-review-original" class="kc-textarea" readonly style="min-height:280px">${esc(review.original_script)}</textarea><button class="kc-btn sm" data-action="rv:review-copy" data-kind="original">复制原始版本</button></div>
+        <div><h3>AI 建议修改版${review.user_script!==null?' · 已有用户编辑版':''}</h3><textarea id="rv-review-script" class="kc-textarea" maxlength="16000" style="min-height:280px" ${l.reviewBusy?'disabled':''}>${esc(l.reviewDrafts[review.id] ?? review.user_script ?? review.ai_script)}</textarea><div class="kc-row"><button class="kc-btn sm" data-action="rv:review-copy" data-kind="revised">复制修改版</button><button class="kc-btn sm" data-action="rv:review-save" ${l.reviewBusy?'disabled':''}>保存用户编辑版</button></div></div>
+      </div>
+      <p id="rv-review-note" role="status">${esc(l.reviewNote || 'AI原始建议已保存。编辑后请主动保存；未保存编辑刷新丢失。')}</p>
+      <details><summary>本次主要修改与待核实事项</summary>
+        ${review.change_summary.map(c=>`<p><b>${categories[c.category]}</b>：${esc(c.reason)} ${c.segment_ids.map(id=>{const s=review.original_segments.find(s=>s.segment_id===id);return s?`<button class="kc-btn sm" data-action="rv:seek" data-t="${s.start}">原文 ${esc(id)} · ${fmtVideoTime(s.start)}</button>`:'';}).join(' ')}</p>`).join('')}
+        ${review.needs_verification.length?`<p>以下内容待人工核实：</p><ul>${review.needs_verification.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:'<p>模型未列出待核实项，仍不代表已经事实核查。</p>'}
+        <p class="kc-mut">${esc(review.prompt_version)} · 原文时间定位来自确认稿，不对应整篇改写稿。</p>
+      </details><details><summary>AI原始建议（不可覆盖）</summary><div class="kc-pre">${esc(review.ai_script)}</div></details>`:''}
+  </div>`;
+}
+
+function vLocalReview() {
+  const r=S.rv,l=r.local,v=l.record,raw=v?.raw_transcript;
+  const confirmed=!!v?.confirmed_version_id && !l.dirty;
+  const stateLabel={uploaded:'已上传，待启动',running:'本地转写中',transcribed:'转写完成',failed:'转写失败',interrupted:'上次转写中断'};
+  const step=confirmed?3:raw?2:v?.state==='running'?1:0;
+  const steps='<div class="kc-steps kc-wrap">'+['选择视频','本地转写','人工核对','确认保存'].map((n,i)=>`<span class="kc-step ${i<step?'done':''} ${i===step?'cur':''}">${esc(n)}</span>`).join('<span class="kc-mut">→</span>')+'</div>';
+  return steps+`<div class="kc-wrap">
+    <div class="kc-card"><div class="kc-h">上传视频 · 本地口播转文字</div>
+      <label for="review-video-file">选择MP4<input class="kc-input" id="review-video-file" type="file" accept=".mp4,video/mp4" ${l.busy || l.reviewBusy?'disabled':''}></label>
+      <p class="kc-mut">单人普通话 · 最长3分钟 · 最大100 MiB。实际容器、视频帧、音轨与时长在本机校验；原视频复制到应用数据目录，不上传云端。无需知识挑战或API Key。</p>
+      ${l.file?`<p>${esc(l.file.name)} · ${(l.file.size/1048576).toFixed(2)} MiB</p>`:''}
+      ${l.file || (v && !raw && v.state!=='running')?`<button class="kc-btn primary" data-action="rv:local-start" ${l.busy?'disabled':''}>${l.busy?'正在上传/提交…':l.file?'上传并启动本地转写':'启动 / 重试本地转写'}</button>`:''}
+      ${l.error?`<div class="kc-errbox" style="display:block" role="alert">${esc(l.error)}</div>`:''}
+    </div>
+    ${v?`<div class="kc-card"><div class="kc-h">${esc(v.name)} ${st(v.state==='running'?'load':v.error?'fail':'done',stateLabel[v.state] || v.state)}</div>
+      <p>${v.metadata.duration.toFixed(2)} 秒 · ${(v.size/1048576).toFixed(2)} MiB · ${esc(v.metadata.audio_codec)} · 原视频保存在本机</p>
+      ${v.error?`<div class="kc-errbox" style="display:block" role="alert">${esc(v.error.code)}：${esc(v.error.message)}</div>`:''}
+      ${v.state==='running'?'<p class="kc-mut" role="status">独立子进程正在本机解码和识别，可切换页面；不显示伪造百分比。刷新后可从下方记录重新打开，重启中断的任务须手动重试。</p>':''}
+      <button class="kc-btn sm" data-action="rv:local-open" data-id="${esc(v.id)}" ${l.busy?'disabled':''}>${l.dirty?'重新读取（放弃未保存修改，需再次点击）':'刷新记录状态'}</button>
+      <video id="review-player" controls preload="metadata" src="/api/videos/${encodeURIComponent(v.id)}/media" style="display:block;width:100%;max-height:300px;margin-top:12px"></video>
+    </div>`:''}
+    ${raw?`<div class="kc-card"><div class="kc-h">逐段核对转写稿 <span id="rv-transcript-status">${st(confirmed?'done':'wait',confirmed?'当前稿已确认':'当前稿待确认')}</span> ${tag('t-blue','本地真实ASR')}</div>
+      <p class="kc-mut">${esc(raw.model)} · CPU INT8 · ${raw.elapsed_seconds.toFixed(2)}秒（模型加载及识别） · 时间戳为段级估计。只改文字、不改时间轴；未保存的编辑刷新后丢失。确认不代表知识掌握。</p>
+      <div class="kc-tablewrap"><table class="kc-table"><thead><tr><th>原视频时间</th><th>识别原文</th><th>修改后文字</th></tr></thead><tbody>${r.segs.map((s,i)=>`<tr><td><button class="kc-btn sm" data-action="rv:seek" data-t="${s.start}">${fmtVideoTime(s.start)}–${fmtVideoTime(s.end)}</button></td><td>${esc(raw.segments[i].text)}</td><td><textarea class="kc-textarea" id="segin-${i}" maxlength="2000" ${l.busy?'disabled':''}>${esc(s.text)}</textarea></td></tr>`).join('')}</tbody></table></div>
+      <p class="kc-mut" id="rv-draft-note" role="status">${l.dirty?'有未保存修改；旧确认稿保留为历史版本。':'当前显示SQLite已保存稿。'}</p>
+      <div class="kc-row"><button class="kc-btn" data-action="rv:local-save" ${l.busy?'disabled':''}>保存修改（待确认）</button><button class="kc-btn primary" data-action="rv:local-confirm" ${l.busy?'disabled':''}>我已核对，确认并保存</button><button class="kc-btn sm" data-action="nav" data-view="works">查看知识作品</button></div>
+      <p class="kc-mut">确认稿用于下方AI文案复盘；只有主动授权并点击按钮才发送文本。</p>
+    </div><details class="kc-card"><summary>历史确认稿（${v.versions.length}版）</summary>${v.versions.map(ver=>`<div class="kc-subpanel"><b>确认稿 v${ver.version}</b><p class="kc-mut">${esc(ver.confirmed_at)}</p>${ver.segments.map(s=>`<p>${fmtVideoTime(s.start)}–${fmtVideoTime(s.end)}：${esc(s.text)}</p>`).join('')}</div>`).join('')}</details>`:''}
+    ${raw?localVideoReviewHtml(v,l):''}
+    <div class="kc-card"><div class="kc-h">本地视频记录 <button class="kc-btn sm" data-action="rv:local-list">刷新列表</button></div>
+      ${l.records.length?l.records.map(record=>`<div class="kc-row"><button class="kc-btn sm" data-action="rv:local-open" data-id="${esc(record.id)}" ${l.busy?'disabled':''}>${esc(record.name)}</button><span class="kc-mut">${esc(record.updated_at)} · ${esc(stateLabel[record.state] || record.state)}${record.confirmed_version_id?' · 已确认':''}</span></div>`).join(''):'<p class="kc-mut">暂无已加载记录；上传后自动保存在本机，可刷新列表查看。</p>'}
+    </div></div>`;
+}
+
 /* ---------------- 我的知识作品 ---------------- */
 function worksListHtml() {
   const f = S.wkFilter;
@@ -527,9 +602,9 @@ function worksListHtml() {
   }).join('');
 }
 
-function remoteRecordText(r) {
+function remoteRecordText(r, includeOrigin = true) {
   const origin=r.questions?.origin;
-  return '## 原始解释（不可覆盖）\n\n'+r.explanation+'\n\n## 追问来源\n\n'+(origin?JSON.stringify(origin,null,2):'尚未调用模型')+
+  return '## 原始解释（不可覆盖）\n\n'+r.explanation+(includeOrigin?'\n\n## 追问来源\n\n'+(origin?JSON.stringify(origin,null,2):'尚未调用模型'):'')+
     '\n\n## 追问与回答\n\n'+(r.questions?.questions || []).map(q=>{
       const a=r.answers.find(x=>x.question_id===q.question_id);
       return '### '+q.question+'\n\n原因：'+q.why_asked+'\n\n原文引用：'+q.based_on+'\n\n回答：'+(!a?'尚未回答':a.state==='skipped'?'明确跳过':a.text);
@@ -537,6 +612,7 @@ function remoteRecordText(r) {
 }
 
 function buildExportMd(w) {
+  if(w.remoteVideo)return '# '+w.title+'\n\n视频ID：'+w.id+'\n\n'+videoTranscriptText(w.record);
   if(w.remote) return '# '+w.title+'\n\n知识点 ID：'+w.knowledgeId+'\n记录 ID：'+w.id+'\n\n'+remoteRecordText(w.record);
   let md = '# ' + w.title + '\n\n- 类型：' + (w.type === 'challenge' ? '知识挑战' : '视频复盘') + '\n- 知识点：' + w.kp + '\n- 保存时间：' + w.updated + '\n';
   if (w.type === 'challenge') {
@@ -581,8 +657,10 @@ function vWorks() {
   const w = S.works[S.wkSel];
   if (!w) { S.wkSel = null; return vWorks(); }
   let detail = '';
-  if (w.remote) {
-    detail=`<div class="kc-card"><div class="kc-h">SQLite 挑战记录 ${originTag(w.record.questions?.origin)}</div><div class="kc-pre">${esc(remoteRecordText(w.record))}</div></div>`;
+  if (w.remoteVideo) {
+    detail=`<div class="kc-card"><div class="kc-h">视频转写 ${tag('t-blue','本地ASR / 非云端AI报告')}</div><div class="kc-pre">${esc(videoTranscriptText(w.record))}</div><button class="kc-btn" data-action="rv:local-edit" data-id="${esc(w.id)}">打开视频与校对</button></div>`;
+  } else if (w.remote) {
+    detail=`<div class="kc-card"><div class="kc-h">讲解文案 ${originTag(w.record.questions?.origin)}</div><div class="kc-pre">${esc(remoteRecordText(w.record, false))}</div></div>`;
   } else if (w.type === 'challenge') {
     const linked = S.works.filter(x => x.type === 'review' && x.linked === w.id);
     detail = `
@@ -633,10 +711,10 @@ function vWorks() {
     <div class="kc-card"><div class="kc-h">导出与删除</div>
       <div class="kc-row">
         <button class="kc-btn" data-action="wk:export">${S.wkExport ? '收起导出内容' : '导出 Markdown'}</button>
-        ${w.type === 'review' && !w.mediaGone ? '<button class="kc-btn danger" data-confirm="1" data-action="wk:del-media">清理媒体文件</button>' : ''}
-        <button class="kc-btn danger" data-confirm="1" data-action="wk:del">删除本条记录</button>
+        ${w.type === 'review' && !w.mediaGone && !w.remoteVideo ? '<button class="kc-btn danger" data-confirm="1" data-action="wk:del-media">清理媒体文件</button>' : ''}
+        ${!w.remoteVideo?'<button class="kc-btn danger" data-confirm="1" data-action="wk:del">删除本条记录</button>':''}
       </div>
-      <p class="kc-mut" style="margin-top:8px">清理媒体仅删除本地视频与派生音频，保留转写与报告；删除记录需二次确认且不可恢复（演示）。</p>
+      <p class="kc-mut" style="margin-top:8px">${w.remoteVideo?'本轮视频原件与文字记录均本地保留，尚未提供视频删除接口；不要直接移动媒体文件。':'清理媒体仅删除本地视频与派生音频，保留转写与报告；删除记录需二次确认且不可恢复（演示）。'}</p>
       ${S.wkExport ? `<div class="kc-pre" id="exp-md">${esc(buildExportMd(w))}</div><div class="kc-row"><button class="kc-btn sm" data-action="wk:copy">复制导出内容</button><span class="kc-mut" id="copy-note"></span></div>` : ''}
     </div>
   </div>`;
@@ -650,14 +728,17 @@ function vSettings() {
     <label>调用模式<select class="kc-select" id="llm-mode"><option value="live" ${S.backend.llm?.mode==='mock'?'':'selected'}>live · 真实模型</option><option value="mock" ${S.backend.llm?.mode==='mock'?'selected':''}>mock · 开发 Stub，不发网</option></select></label>
     <label>API endpoint<input class="kc-input" id="llm-endpoint" value="${esc(S.backend.llm?.endpoint || 'https://api.deepseek.com')}"></label>
     <label>模型名称<input class="kc-input" id="llm-model" value="${esc(S.backend.llm?.model || '')}" placeholder="deepseek-v4-pro"></label>
-    <label>API Key（仅后端进程内存）<input class="kc-input" type="password" id="llm-key" autocomplete="off" placeholder="留空保留现有 Key；重启后需重填"></label>
+    <label>API Key / 替换密钥<input class="kc-input" type="password" id="llm-key" autocomplete="off" maxlength="2048" placeholder="输入新 Key 即替换；同端点留空保留，不回显"></label>
+    <label><input type="checkbox" id="llm-remember" ${S.backend.llm?.remember_key?'checked':''}>记住 API Key（Windows 系统凭据管理器）</label>
+    <p class="kc-mut">${S.backend.llm?.saved_key===true?'密钥已保存':S.backend.llm?.saved_key===false?'当前端点无已保存密钥':'系统凭据状态尚未确认'}；当前来源：${esc(({environment:'环境变量',saved:'系统凭据',session:'本次会话',none:'未配置'})[S.backend.llm?.key_source] || '未配置')}。取消勾选并应用会删除当前端点已保存凭据，本次会话仍可使用。删除按钮同时清除当前会话与当前端点已保存密钥；环境变量仍存在时，重启会重新读取。</p>
+    ${S.backend.llm?.credential_error?`<p class="kc-errbox" style="display:block" role="alert">${esc(S.backend.llm.credential_error)}</p>`:''}
     <p class="kc-mut">发送内容：所选知识点与用户解释文字；不发送视频。真实请求默认最多 3 次/进程，不自动重试；重启额度计数会重置，实际费用以服务商为准。</p>
-    <button class="kc-btn primary" data-action="api:settings" ${S.backend.busy?'disabled':''}>${S.backend.busy?'正在保存…':'应用本次配置'}</button> <button class="kc-btn" data-action="api:clear-key">清除进程内 Key</button>
+    <button class="kc-btn primary" data-action="api:settings" ${S.backend.busy?'disabled':''}>${S.backend.busy?'正在保存…':'应用配置'}</button> <button class="kc-btn" data-action="api:clear-key" ${S.backend.busy?'disabled':''}>删除已保存密钥并清除本次 Key</button>
     </div>` : ''}<div class="kc-grid" style="grid-template-columns:1fr 1fr">
     <div class="kc-card"><div class="kc-h">本地依赖 ${mockTag()}</div>
       <dl class="kc-kv">
         <dt>FFmpeg</dt><dd>${AppAPI.enabled?st('wait','本轮未接入'):st('done', '已检测')}</dd>
-        <dt>本地 ASR</dt><dd>${AppAPI.enabled?st('wait','本轮未实现'):st('done', 'faster-whisper small · int8')}</dd>
+        <dt>本地 ASR</dt><dd>${AppAPI.enabled?st(S.backend.asr?.available?'done':'wait',S.backend.asr?.available?'faster-whisper small · CPU INT8（文件存在，运行时校验）':'未就绪，请按ASR说明安装引擎/模型'):st('done', 'faster-whisper small · int8')}</dd>
         <dt>SQLite</dt><dd>${AppAPI.enabled?st(S.backend.ready?'done':'fail',S.backend.ready?'本地 API 已连接':'本地 API 未连接'):st('done', '可用')}</dd>
         <dt>大模型 API</dt><dd>${AppAPI.enabled?originTag(S.backend.llm?.mode==='mock'?{mode:'mock'}:S.backend.llm?.configured?{mode:'live',provider:'已配置',model:S.backend.llm.model}:null):st('fail', '未配置')}</dd>
       </dl>
@@ -675,7 +756,7 @@ function vSettings() {
     </div>
     <div class="kc-card"><div class="kc-h">抽题音效 <span class="kc-mut">（ZzFX 合成 · 本地生成，无音频文件）</span></div>
       <div class="kc-switchrow"><input type="checkbox" id="sound-enabled" ${SoundFx.isEnabled() ? 'checked' : ''}><div><b>抽题音效开关</b><div class="kc-mut">词条切换滴答声与结果锁定音；关闭后动画不受影响。偏好保存在本机 localStorage。</div></div></div>
-      <div class="kc-switchrow" style="border-bottom:none"><div style="flex:1"><b>音量</b> <span class="kc-mut" id="sound-volume-label">${Math.round(SoundFx.getVolume() * 100)}%</span><input type="range" id="sound-volume" min="0" max="100" value="${Math.round(SoundFx.getVolume() * 100)}" style="width:100%;margin-top:6px"></div></div>
+      <div class="kc-switchrow" style="border-bottom:none"><div style="flex:1;min-width:0"><label for="sound-volume"><b>音量</b> <span class="kc-mut" id="sound-volume-label">${Math.round(SoundFx.getVolume() * 100)}%</span></label><input type="range" id="sound-volume" min="0" max="100" value="${Math.round(SoundFx.getVolume() * 100)}"></div></div>
     </div>
     <div class="kc-card"><div class="kc-h">数据与隐私</div>
       <p class="kc-mut">原视频仅本地保存，可单独清理；提取的音频为临时数据，任务结束清理。导出不含密钥与内部路径。删除媒体保留文字记录与时间定位。</p>

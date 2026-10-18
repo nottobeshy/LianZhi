@@ -89,20 +89,30 @@ function render() {
   cancelAllDraws();
   if (spinCompass) { spinCompass.destroy(); spinCompass = null; }
   app.innerHTML = `
-  <div class="kc-banner">${AppAPI.enabled ? '炼知 · 思考在前，AI 在后。挑战经本地 API 与 SQLite 保存；追问逐条标记 live / mock，预存案例标记 example；视频复盘仍为 Mock。' : '独立前端 Demo Mock — AI 反馈、转写与进度均为预置 / 模拟数据；正式挑战请通过本地 Python 服务进入。'}</div>
+  <div class="kc-banner">${AppAPI.enabled ? '炼知 · 思考在前，AI 在后。挑战、视频转写与文案复盘保存到 SQLite；AI结果标记 live / mock，预存案例标记 example；模型建议需要人工复核。' : '独立前端 Demo Mock — AI 反馈、转写与进度均为预置 / 模拟数据；正式挑战请通过本地 Python 服务进入。'}</div>
   <header class="kc-header"><div class="kc-wrap kc-header-in">
     <div class="kc-logo"><svg class="kc-mark" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M13.8 6.2 11.2 11.2 6.2 13.8 8.8 8.8 Z" fill="var(--primary)"/></svg>炼知<small>LianZhi · 思考在前，AI 在后</small></div>
     <nav class="kc-nav" aria-label="主导航">${NAV.map(([k, l]) =>
       `<button data-action="nav" data-view="${k}" class="${S.view === k ? 'active' : ''}" aria-current="${S.view === k ? 'page' : 'false'}">${l}${k === 'works' && S.works.length ? ' · ' + S.works.length : ''}</button>`).join('')}</nav>
   </div></header>
   <main class="kc-main">${S.backend.error ? `<div class="kc-wrap"><div class="kc-errbox" style="display:block" role="alert">${esc(S.backend.error)}</div></div>` : ''}${(VIEWS[S.view] || vHome)()}</main>
-  <footer class="kc-footer">炼知 · 思考在前，AI 在后 · 词库保存在本机浏览器；HTTP 模式的挑战记录保存到 SQLite。活动挑战草稿和倒计时仍为内存状态。</footer>`;
+  <footer class="kc-footer">炼知 · 思考在前，AI 在后 · 词库保存在本机浏览器；HTTP 模式的挑战与已保存视频转写存入 SQLite。未提交草稿和倒计时仍为内存状态。</footer>`;
   bindFileInputs();
   syncLearningTimer();
+  AppAPI.syncVideoPolling();
 }
 
 /* ---------- 词库 .md 解析输入绑定（每次渲染后都重新挂） */
 function bindFileInputs() {
+  const videoInput=document.getElementById('review-video-file');
+  if(videoInput)videoInput.addEventListener('change',()=>{
+    const file=videoInput.files?.[0],l=S.rv.local;
+    videoInput.value='';
+    if(!file || l.busy || l.reviewBusy)return;
+    if(!/\.mp4$/i.test(file.name) || file.size<=0 || file.size>104857600){l.error='请选择大于0、最大100 MiB的MP4视频；最长3分钟由服务端校验。';render();return;}
+    Object.assign(l,{file,record:null,error:'',dirty:false,uploadId:null,command:null,pollFailed:false});
+    S.rv.segs=[];S.rv.step=0;render();
+  });
   const fi = document.getElementById('vocab-file');
   if (!fi) return;
   fi.addEventListener('change', () => {
@@ -179,6 +189,19 @@ function beginDraw() {
 const err = (id, msg) => { const e = document.getElementById(id); if (e) { e.textContent = msg; e.style.display = 'block'; } };
 
 function syncTranscriptStatus() {
+  if(AppAPI.enabled && S.rv.local.record){
+    const l=S.rv.local,confirmed=!!l.record.confirmed_version_id && !l.dirty;
+    const status=document.getElementById('rv-transcript-status');
+    if(status)status.textContent=confirmed?'当前稿已确认':'当前稿待确认';
+    const note=document.getElementById('rv-draft-note');
+    if(note)note.textContent=l.dirty?'有未保存修改；旧确认稿保留为历史版本。':'当前显示SQLite已保存稿。';
+    const button=document.getElementById('rv-ai-review-btn');
+    if(button)button.disabled=!confirmed || !l.reviewConsent || l.reviewBusy || l.busy || (!S.backend.llm?.configured && S.backend.llm?.mode!=='mock');
+    const reviewStatus=document.getElementById('rv-ai-review-status');
+    const review=l.reviews.find(r=>r.id===l.reviewSelected);
+    if(reviewStatus && review)reviewStatus.textContent=l.dirty || review.stale?'历史复盘已过期（当前文案已改变）':'绑定当前确认版本';
+    return;
+  }
   const status = document.getElementById('rv-transcript-status');
   if (status) status.innerHTML = Store.isTranscriptConfirmed()
     ? st('done', '当前 v' + S.rv.version + ' · 已确认')
@@ -239,6 +262,7 @@ app.addEventListener('click', e => {
         S.view = d.view; S.wkSel = null; S.wkExport = false; S.wkLinkPanel = false;
         render();
         if (AppAPI.enabled && d.view==='works') AppAPI.loadWorks();
+        if (AppAPI.enabled && d.view==='review') AppAPI.loadVideos();
       }
       break;
 
@@ -314,6 +338,17 @@ app.addEventListener('click', e => {
     case 'ch:restart': S.ch = freshCh(); render(); break;
 
     /* 视频复盘 */
+    case 'rv:local-list': AppAPI.loadVideos();break;
+    case 'rv:local-open': if(S.rv.local.dirty && !armed(b))return;AppAPI.openVideo(d.id);break;
+    case 'rv:local-edit': S.view='review';AppAPI.openVideo(d.id);break;
+    case 'rv:local-start': AppAPI.startVideo();break;
+    case 'rv:local-save': AppAPI.saveTranscript(false);break;
+    case 'rv:local-confirm': AppAPI.saveTranscript(true);break;
+    case 'rv:ai-review': AppAPI.reviewVideo();break;
+    case 'rv:review-select': S.rv.local.reviewSelected=d.id;S.rv.local.reviewNote='';render();break;
+    case 'rv:review-save': AppAPI.saveReviewScript();break;
+    case 'rv:review-copy': AppAPI.copyReview(d.kind);break;
+    case 'rv:seek': {const player=document.getElementById('review-player');if(player)player.currentTime=Math.max(0,Number(d.t)||0);break;}
     case 'rv:pick': S.rv.picked = true; render(); break;
     case 'rv:start': startProc(); break;
     case 'rv:clear-seg': { document.getElementById('segin-' + d.i).value = ''; Store.editTranscript(+d.i, ''); syncTranscriptStatus(); break; }
@@ -339,10 +374,12 @@ app.addEventListener('click', e => {
     case 'api:examples': AppAPI.examples();break;
     case 'api:settings': {
       const body={mode:document.getElementById('llm-mode').value,endpoint:document.getElementById('llm-endpoint').value,
-        model:document.getElementById('llm-model').value,api_key:document.getElementById('llm-key').value};
+        model:document.getElementById('llm-model').value,api_key:document.getElementById('llm-key').value,
+        remember_key:document.getElementById('llm-remember').checked};
+      document.getElementById('llm-key').value='';
       AppAPI.settings(body);break;
     }
-    case 'api:clear-key': AppAPI.request('/settings/llm',undefined,'DELETE').then(data=>{S.backend.llm=data;render();},e=>{S.backend.error=e.message;render();});break;
+    case 'api:clear-key': AppAPI.clearKey();break;
     case 'wk:back': S.wkSel = null; render(); break;
     case 'wk:clear-filter': S.wkFilter = { q: '', type: 'all', domain: 'all' }; render(); break;
     case 'wk:link-panel': S.wkLinkPanel = true; render(); break;
@@ -375,7 +412,15 @@ app.addEventListener('input', e => {
   else if (id === 'ch-rev') S.ch.draft.revision = e.target.value;
   else if (id && id.startsWith('remote-answer-')) { const a=S.ch.remoteAnswers[id.slice(14)] ||= {text:'',skipped:false};a.text=e.target.value; }
   else if (id === 'script-md') { S.ch.scriptMd = e.target.value; S.ch.scriptEdited = true; const bd = document.getElementById('script-badge'); if (bd) bd.style.display = 'inline-block'; }
-  else if (id && id.startsWith('segin-')) { Store.editTranscript(+id.slice(6), e.target.value); syncTranscriptStatus(); }
+  else if (id && id.startsWith('segin-')) {
+    if(AppAPI.enabled && S.rv.local.record){S.rv.segs[+id.slice(6)].text=e.target.value;S.rv.local.dirty=true;}
+    else Store.editTranscript(+id.slice(6), e.target.value);
+    syncTranscriptStatus();
+  }
+  else if (id === 'rv-review-script') {
+    const l=S.rv.local;l.reviewDrafts[l.reviewSelected]=e.target.value;
+    const note=document.getElementById('rv-review-note');if(note)note.textContent='有未保存的用户编辑；切页保留，刷新丢失。';
+  }
   else if (id === 'wk-q') { S.wkFilter.q = e.target.value; const list = document.getElementById('wk-list'); if (list) list.innerHTML = worksListHtml(); }
   else if (id === 'sound-volume') {
     SoundFx.setVolume(e.target.value / 100);
@@ -389,6 +434,7 @@ app.addEventListener('change', e => {
   else if (id === 'wk-domain') { S.wkFilter.domain = e.target.value; const list = document.getElementById('wk-list'); if (list) list.innerHTML = worksListHtml(); }
   else if (id === 'consent-ch') S.consent.challenge = e.target.checked;
   else if (id === 'consent-rv') S.consent.review = e.target.checked;
+  else if (id === 'rv-review-consent') {S.rv.local.reviewConsent=e.target.checked;syncTranscriptStatus();}
   else if (id === 'sound-enabled') SoundFx.setEnabled(e.target.checked);
 });
 

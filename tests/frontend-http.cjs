@@ -28,6 +28,8 @@ const b=boot(null,{location:{protocol:'http:'},crypto:globalThis.crypto,AbortCon
   assert.equal(b.run('S.works.filter(w=>w.remote).length'),1);
   assert.ok(b.run('buildExportMd(S.works.find(w=>w.remote))').includes(explanation));
   b.run("S.view='works';S.wkSel=S.works.findIndex(w=>w.remote);render()");
-  assert.ok(b.app.innerHTML.includes('SQLite 挑战记录'));
+  assert.ok(b.app.innerHTML.includes('讲解文案'));
+  assert.ok(!b.app.innerHTML.includes('追问来源'));
+  assert.ok(b.app.innerHTML.includes('mock · 开发 Stub'));
   console.log(JSON.stringify({id:b.run('S.ch.remote.id'),explanation}));
 })().catch(e=>{console.error(e);process.exitCode=1;});
