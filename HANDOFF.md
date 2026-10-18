@@ -1,4 +1,32 @@
-# 2026-10-18 视频口播AI复盘与双版本文案（当前专项）
+# 2026-10-19 火焰罗盘正式集成（当前专项已完成）
+
+用户明确批准将独立Demo既有柔和SVG方案A、V2质感升级、强度80%、速度2.0×移植至正式首页与知识挑战；只做装饰与生命周期接线，不扩大业务范围。原型HTML/CSS/JS、后端、Schema v3、Prompt、词库、draw.js、sound.js、api.js、store.js与app.css保持不变。来源为 `prototypes/flame-compass/`，README已同步“独立Demo仍保留，正式前端已集成”，没有把调试面板带入产品。
+
+## 代码、协作与回退
+
+- 开始时 `codex/lianzhi-mvp` 有此前ASR/视频复盘等大量未提交成果，无未合并路径；先向用户报告并保留全部成果，创建 `codex/flame-compass-integration`，源代码基线提交 **ab2fd76**（未含私人视频/数据库/模型/Key/output/sources）。没有其他Agent改同文件，无合并冲突，未推送。`output/`原有未跟踪内容保持原样。
+- 新增 `demo/js/flame.js`、`demo/css/flame.css`；修改 `demo/index.html` 加载、`demo/js/views.js`挂载点与共用罗盘HTML、`demo/js/compass.js`帧调度注入、`demo/js/app.js`原回调接线/pagehide清理。没有整页替换或Mock回退。
+- 新增 `demo/tests/test-flame.js`、`tests/browser-flame-compass.cjs`；文档为本HANDOFF、根README、demo/README、原型README、AGENTS、docs/ARCHITECTURE、docs/00-文档约定与决策、新增docs/FLAME_COMPASS.md。详细职责和API见该说明。
+- 首页与抽题共用同一火焰模块；锁定卡复用原罗盘DOM使340ms目标回落与700ms光效收尾不被420ms业务render打断。待机等级0.25，抽题onTick先升后降，onLock单次升至1.18再恢复。指针公式、Tick/Lock路径和业务结果不变，局部余烬噪声不消耗抽题随机数。
+- 一个原生RAF服务指针与火焰，各自控制；无额外火焰定时器。挂载按home/draw幂等，离页清理；hidden/减少动态暂停、pagehide销毁、bfcache恢复挂载。异常隔离和资源缺失降级保证挑战可用，aria-hidden且不截获点击。
+
+## 实际测试
+
+- 常规pytest **73 passed, 4 skipped in29.62s**。全部既有11前端脚本exit0，新增调度单测exit0，共12；既有部分打印脚本不视为所有断言覆盖。
+- Chromium148真实页面通过375/768/1366/1920px首页/锁定卡无横溢；10次自然抽题结果等于预选值，Lock各1次、火焰升降与收尾正确、节点保持同一。双击跳过只锁一次；切页取消不触发Lock、DRAW_ACTIVE/帧资源归零；重渲染无重复初始化，减少动态/合成visibility/pagehide/模块缺失降级通过。应用最高同时1原生RAF，page_errors=[]、api_writes=[]。截图与evidence在 `.test-runtime/flame-integration/browser/`，已查看移动首页和锁定页等截图，无明显遮挡。
+- 首次脚本已过10次抽题，帧总数断言失败因探针计入Playwright自己的RAF轮询；限定为应用调用源后完整重跑通过。未改业务代码放宽验收。早期语法命令工作目录路径重复导致MODULE_NOT_FOUND，修正路径后语法全部通过。
+- 隔离数据目录真实本地ASR→确认→**明确Stub**复盘→复制/用户编辑→过期→实际后端重启新浏览器读取：**1 passed in17.00s**，5段/44.6秒，page_errors=[]；不收费、不写正式库。正式已有live视频/用户编辑稿只读浏览通过，stale=false、无页面错误。
+- 保护源文件最初30项hash均相等；之后仅原型README按本任务更新状态，最终其余29项保持相等。涵盖后端所有Python源、原型动画源、draw/sound/api/store/banks/vocab；语法检查和diff空白检查通过。原数据目录/预算不改。
+
+## 运行、剩余限制与停止点
+
+当前正式服务仍为 http://127.0.0.1:8000/ ，刷新即可见火焰。需重启时使用 `LIANZHI_DATA_DIR=E:\Projects\KnowledgeCompass\.test-runtime\browser`、`LLM_MAX_REQUESTS=0` 后运行 `.\.venv\Scripts\python.exe -m backend`，避免启动第二个8000服务或切换目录造成旧记录不可见。完整命令及复验见docs/FLAME_COMPASS.md。
+
+真实DeepSeek累计**3次额度已用尽**，本轮未再发收费请求。AI追问/配置/SQLite协议由自动测试覆盖，已有真实复盘只读打开；没有声称重新完成真实AI全流程。实际扬声器听感、OS后台节流（本轮为合成visibility）、低配长期性能、其他浏览器与Windows桌面包未验证。最终审美由用户确认。至此完成本专项并停止，不继续视觉美化。
+
+---
+
+# 2026-10-18 视频口播AI复盘与双版本文案（历史专项）
 
 用户本轮明确授权确认稿云端文字复盘、原始/AI建议对照、用户继续编辑、SQLite持久化及版本历史；提供项目根目录“知识讲解测试.mp4”作为新视频，允许使用已配置Key作真实联调。仅文本，不发送原视频/音频，不扩展画面/情绪/评分或桌面打包。用户要求完成后暂停验收。
 

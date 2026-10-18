@@ -10,7 +10,7 @@ const spinEaseOutCubic = t => 1 - Math.pow(1 - t, 3);
 /* 初速约 300°/s、末期约 45°/s：K / interval(p)，K = 300 × 60 */
 const SPIN_K = 18000;
 
-function createSpinCompass(stageEl) {
+function createSpinCompass(stageEl, frames = {request:requestAnimationFrame,cancel:cancelAnimationFrame}) {
   const rotor = stageEl ? stageEl.querySelector('#spin-rotor') : null;
   let angle = 0, speed = 0, raf = 0, lastT = 0, decaying = false, destroyed = false;
 
@@ -27,7 +27,7 @@ function createSpinCompass(stageEl) {
     }
     angle += speed * dt;
     apply();
-    if (speed > 0 || !decaying) raf = requestAnimationFrame(loop);
+    if (speed > 0 || !decaying) raf = frames.request(loop);
     else raf = 0;
   }
 
@@ -36,7 +36,7 @@ function createSpinCompass(stageEl) {
     start(reduced) {
       if (destroyed || reduced) return;
       speed = SPIN_K / SPIN_MIN_MS;          // 初始快速旋转
-      if (!raf) { lastT = 0; raf = requestAnimationFrame(loop); }
+      if (!raf) { lastT = 0; raf = frames.request(loop); }
     },
     /* p ∈ [0,1]：词条切换进度；速度跟随切换间隔反比变化 */
     setPhase(p) {
@@ -48,7 +48,7 @@ function createSpinCompass(stageEl) {
     lock() { decaying = true; },
     destroy() {
       destroyed = true;
-      if (raf) cancelAnimationFrame(raf);
+      if (raf) frames.cancel(raf);
       raf = 0;
     },
     /* 供测试：当前角度与转速 */

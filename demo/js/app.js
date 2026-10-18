@@ -98,6 +98,7 @@ function render() {
   <main class="kc-main">${S.backend.error ? `<div class="kc-wrap"><div class="kc-errbox" style="display:block" role="alert">${esc(S.backend.error)}</div></div>` : ''}${(VIEWS[S.view] || vHome)()}</main>
   <footer class="kc-footer">炼知 · 思考在前，AI 在后 · 词库保存在本机浏览器；HTTP 模式的挑战与已保存视频转写存入 SQLite。未提交草稿和倒计时仍为内存状态。</footer>`;
   bindFileInputs();
+  if(typeof FlameCompass!=='undefined')FlameCompass.mountAll(app);
   syncLearningTimer();
   AppAPI.syncVideoPolling();
 }
@@ -139,6 +140,7 @@ function bindFileInputs() {
 }
 
 /* ---------- 抽题编排：先定结果，再播动画，结束后落到锁定卡 ---------- */
+function drawFlame() { return typeof FlameCompass==='undefined'?null:FlameCompass.get('draw'); }
 function beginDraw() {
   const c = S.ch;
   const drawToken = {};
@@ -159,8 +161,9 @@ function beginDraw() {
   const stage = document.getElementById('draw-stage');
   if (!stage) { c.drawDone = true; render(); return; }
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  spinCompass = createSpinCompass(stage);
+  spinCompass = createSpinCompass(stage,typeof FlameCompass==='undefined'?undefined:FlameCompass.frames);
   spinCompass.start(reduced);
+  drawFlame()?.start();
   const winnerIdx = pool.findIndex(it => it.id === winner.id);
   runDrawCeremony({
     stage: stage,
@@ -170,15 +173,18 @@ function beginDraw() {
     onTick: (i, total) => {
       SoundFx.tick();
       if (spinCompass) spinCompass.setPhase(total > 1 ? i / (total - 1) : 1);
+      drawFlame()?.setPhase(total > 1 ? i / (total - 1) : 1);
     },
     onLock: () => {
       SoundFx.lock();
       if (spinCompass) spinCompass.lock();
+      drawFlame()?.lock();
     },
     onDone: (reason) => {
       if (S.ch !== c || c.drawToken !== drawToken) return;
       c.drawDone = true;
       if (spinCompass) { spinCompass.destroy(); spinCompass = null; }
+      if(reason==='cancel')drawFlame()?.idle();
       /* cancel（页面离开）：不重渲染，由触发方的下一次 render 收敛视图 */
       if (reason !== 'cancel' && S.view === 'challenge' && S.ch.step === 1) render();
     }
@@ -438,5 +444,11 @@ app.addEventListener('change', e => {
   else if (id === 'sound-enabled') SoundFx.setEnabled(e.target.checked);
 });
 
+window.addEventListener?.('pagehide',()=>{
+  cancelAllDraws();
+  if(spinCompass){spinCompass.destroy();spinCompass=null;}
+  if(typeof FlameCompass!=='undefined')FlameCompass.destroyAll();
+});
+window.addEventListener?.('pageshow',event=>{if(event.persisted)render();});
 render();
 AppAPI.init();

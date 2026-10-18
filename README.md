@@ -1,5 +1,11 @@
 # 炼知 · LianZhi
 
+## 火焰罗盘已正式集成（2026-10-19）
+
+首页与知识挑战现共用已确认的柔和SVG火焰V2（强度80%、速度2.0×），原罗盘主体/指针、真实抽题与AI/SQLite/视频/设置能力保留。独立 `prototypes/flame-compass/` 继续作为视觉参考，正式动画在 `demo/js/flame.js` 与 `demo/css/flame.css`，不含试验控制面板。
+
+刷新当前 [正式应用](http://127.0.0.1:8000/) 即可查看。**重启须保留 `LIANZHI_DATA_DIR=E:\Projects\KnowledgeCompass\.test-runtime\browser` 与 `LLM_MAX_REQUESTS=0`，避免切换旧记录目录或重开收费预算。** 启动命令、实际修改、生命周期与验收见 [火焰集成说明](docs/FLAME_COMPASS.md)。本轮73项pytest、12个前端脚本及四屏宽/10次抽题浏览器验收通过；隔离真实ASR+明确Stub复盘重启联测通过，正式已有live视频只读显示正常。本轮没有再发真实AI请求。
+
 ## 视频文案AI复盘（2026-10-18）
 
 本轮新增确认稿→主动授权文字外发→知识/逻辑/表达建议→原版与AI版对照→用户编辑版→SQLite版本历史。复用当前模型配置，原视频不发云端；模型意见需人工复核。转写改变后旧复盘保留并标过期。Schema升级v3，v2升级前自动备份，旧挑战/视频保留。

@@ -16,7 +16,7 @@ function vHome() {
       </div>
       <div class="kc-row" style="margin-top:16px">${tag('t-gray', '本地优先 · 单机运行')}${mockTag()}${tag('t-gray', '黑客松演示原型')}</div>
     </div>
-    <div class="kc-compass" aria-hidden="true">
+    <div class="kc-compass" data-flame-compass="home" aria-hidden="true">
       ${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<i style="transform:rotate(${a}deg)"></i>`).join('')}
       <div class="kc-needle"></div>
     </div>
@@ -219,6 +219,13 @@ function chDrawConfigCard() {
   </div>`;
 }
 
+function spinCompassHtml() {
+  return `<div class="kc-spincompass" data-flame-compass="draw" aria-hidden="true">
+    ${[0,45,90,135,180,225,270,315].map(a=>`<i style="transform:rotate(${a}deg)"></i>`).join('')}
+    <div class="kc-spin-rotor" id="spin-rotor"><div class="kc-spin-needle"></div></div>
+  </div>`;
+}
+
 function vChallenge() {
   const c = S.ch;
   const pool = Store.filterPool();
@@ -238,10 +245,7 @@ function vChallenge() {
       <div class="kc-card"><div class="kc-h">抽取知识词条</div>
         <p class="kc-mut" style="margin:4px 0 10px">已按当前条件筛出 ${pool.length} 个候选。抽取结果已预先决定，动画只是走向它；多候选时避免与上次重复。</p>
         <div class="kc-draw-stage" id="draw-stage">
-          <div class="kc-spincompass" aria-hidden="true">
-            ${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<i style="transform:rotate(${a}deg)"></i>`).join('')}
-            <div class="kc-spin-rotor" id="spin-rotor"><div class="kc-spin-needle"></div></div>
-          </div>
+          ${spinCompassHtml()}
           <div class="kc-draw-card">
             <div class="kc-draw-term">—</div>
             <div class="kc-draw-meta"></div>
@@ -253,6 +257,7 @@ function vChallenge() {
     } else {
       body = `
       <div class="kc-card"><div class="kc-h">已锁定词条</div>
+        ${spinCompassHtml()}
         ${pool.length === 1 ? '<div class="kc-warnbox">题库中仅有 1 个词条符合当前条件（按规则如实提示，不伪造随机过程）。</div>' : ''}
         <div class="kc-lockedcard"><span class="kc-stamp">已锁定</span>
           <div class="kc-h" style="font-size:17px;margin-bottom:6px">${esc(item.title)}</div>

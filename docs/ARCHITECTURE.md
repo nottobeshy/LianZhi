@@ -1,5 +1,9 @@
 # 炼知MVP架构（2026-10-17实际实现）
 
+## 2026-10-19 火焰正式集成
+
+`demo/js/flame.js` 封装独立Demo已确认的柔和SVG V2（80%/2×），首页/抽题复用；flame.css只作用装饰层。app.js只在原draw生命周期通知start/setPhase/lock/idle，picker、draw.js业务时序与音效不改。compass.js注入共享帧调度器，指针和火焰独立订阅同一个原生RAF；hidden/减少动态暂停、切页/pagehide销毁，锁定卡重渲染复用原节点避免重复光效。初始化或绘制失败可降级，装饰层不截获点击。无后端/Schema/协议变化。来源、文件、实际测试与限制见[火焰集成说明](FLAME_COMPASS.md)。
+
 ## 2026-10-18 视频文案复盘增量
 
 在本地ASR/不可变确认稿基础上新增文字AI复盘，不发送视频。review_routes.py读取数据库确认快照并验证consent/版本，复用LLMService的Key/端点/锁/预算/错误处理；prompts/video_review.py维护独立提示词video-script-review-v1，schemas.py严格检查结构与实际段引用。确认稿只读，AI建议与用户编辑分开保存；改写稿无模型生成时间戳。双版本复用原页面kc-grid，窄屏自动堆叠，不改抽题/罗盘/音效。
