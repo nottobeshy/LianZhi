@@ -41,6 +41,8 @@ def test_frozen_asr_command(tmp_path,monkeypatch):
 def test_desktop_paths_do_not_write_bundle(tmp_path,monkeypatch):
     pytest.importorskip('platformdirs')
     from desktop.paths import prepare
+    # prepare() sets defaults; isolate the whole mapping, including previously absent keys.
+    monkeypatch.setattr(os,'environ',os.environ.copy())
     for name in ['DATA','CACHE','LOG']:
         monkeypatch.setenv('LIANZHI_'+name+'_DIR',str(tmp_path/name))
     monkeypatch.delenv('LIANZHI_ASR_MODEL_DIR',raising=False)
