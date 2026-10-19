@@ -1,5 +1,16 @@
 # 2026-10-19 Windows v0.1.0 候选封装（本地已验证，未公开发布）
 
+## 最终候选交付补记
+
+最终软件包与源码ZIP均来自 **9c5377673918db93ea6436f71d266d0e6473ee88**。本节为构建后的验收记录，不将后续文档补记提交冒充该候选源码版本；拟发布标签须以被最终批准的候选commit为准。
+
+- `release-artifacts/LianZhi-v0.1.0-windows-x64-candidate.zip`：120181772字节，462文件；SHA256=`370fe55be7309093fefea92fe899386d3df535f175eabf6bde941454ec3c58f9`。
+- 同提交 `LianZhi-v0.1.0-source.zip`：459984字节；SHA256=`8c22c9815362d147881adcde145cd208b0c5224d59e511e20b20866b796d5127`。两个ZIP均testzip完整，包内build-info/SOURCE_VERSION与commit匹配；各附.zip.sha256。
+- 最终包已重新解压到C盘“炼知 最终候选-9c53776”，使用其worker不带--output，通过默认缓存路径逻辑实际下载固定模型到C盘全新用户缓存（全新HF_HOME），24秒完成并通过权重SHA。未依赖E盘开发models或原工程目录。
+- 最终实际EXE/WebView2测试 **1 passed in34.18s**：沿用完整挑战/ASR/Stub复盘/WinVault/保存重启流程，新增复制成功提示和安装目录文件集合无新增写入检查；两次正常进程退出、端口关闭，page_errors=[]、日志无ERROR、云请求0。临时假Key清理，正式8000旧记录逐项读回仍与集成前快照相等，额度0未动。
+- 常规 **79 passed, 5 skipped in31.49s**，12个前端脚本exit0。最终manifest已标记本机独立路径GUI通过，但人工双击/全新VM/真实AI/CI执行/公开许可审核仍pending；安全汇总在release-artifacts/acceptance-summary.json。不把这些待验项标成已完成。
+- 对可选fastapi-desktop的最后一次只读浅克隆也因连接重置失败；未使用其未审查代码，不编造许可证。GitHub仍只完成账号识别，无建仓/推送/公开Release。提交本候选给用户审查后停止发布动作。
+
 用户明确授权桌面封装、工程测试、本地Windows ZIP候选和后续Actions候选流程，取代历史“不批准桌面打包”的范围限制；未授权公开Release。保留现有FastAPI/原生前端/SQLite v3/ASR/WinVault，不改变业务。GitHub连接已确认账号nottobeshy，当前无本地remote且可见仓库不含炼知；未挪用quickkey-win11，仓库名称与自身许可证仍待确定。
 
 ## 阶段1/2完成与阶段3/4准备（最新状态）

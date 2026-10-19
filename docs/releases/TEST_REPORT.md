@@ -1,5 +1,13 @@
 # v0.1.0 Windows 候选验收记录
 
+## 最终交付补记（构建后）
+
+最终候选源码固定 `9c5377673918db93ea6436f71d266d0e6473ee88`，安装ZIP 120181772字节 / SHA256 `370fe55be7309093fefea92fe899386d3df535f175eabf6bde941454ec3c58f9`；同提交源码ZIP 459984字节 / SHA256 `8c22c9815362d147881adcde145cd208b0c5224d59e511e20b20866b796d5127`。完整性与包内版本身份检查通过。后续本报告补记提交不改变这些已验收制品的源码SHA。
+
+最终ZIP重新解压C盘中文/空格目录；最终worker按默认缓存逻辑实际下载模型至C盘全新缓存（HF_HOME也全新），24秒通过权重SHA。最终包实际WebView2/冻结ASR/完整挑战与Stub追问/Stub文案/WinVault/SQLite/词库音量/关闭重启 **1 passed in34.18s**，同时验证复制写入成功提示、安装目录文件集合无变化、页面无脚本错误、desktop.log无ERROR，云请求0。安全结果在本机release-artifacts/acceptance-summary.json，manifest与SHA文件关联该commit，不含测试口播/Key/SQLite。常规79通过5跳过/12个前端脚本结果不变。
+
+最终候选供用户审查。人工下载双击、独立全新系统、真实AI新预算、CI配置执行、源码许可证和native分发审核仍未完成；GitHub源码仓库与Releases尚未创建，没有公开发布。
+
 2026-10-19，本机Windows x64；CPython3.12.14，pywebview6.2.1 / PyInstaller6.22.3 / hooks2026.8 / platformdirs4.13.5，系统WebView2 155.0.4283.62。
 
 ## 阶段0：调研 / 阶段1：实现
