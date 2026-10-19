@@ -29,6 +29,7 @@ Copy-Item -LiteralPath build/release-metadata/third-party-licenses -Destination 
 Copy-Item -LiteralPath packaging/下载ASR模型.cmd -Destination $app
 Copy-Item -LiteralPath docs/releases/WINDOWS_QUICKSTART.md -Destination (Join-Path $app '使用说明.md')
 Copy-Item -LiteralPath docs/releases/v0.1.0.md -Destination (Join-Path $app 'Release-Notes.md')
+Copy-Item -LiteralPath docs/releases/TEST_REPORT.md -Destination $app
 Copy-Item -LiteralPath docs/releases/THIRD_PARTY.md -Destination $app
 & $pythonExe -m scripts.package_windows
 if ($LASTEXITCODE) {throw 'ZIP validation failed'}
