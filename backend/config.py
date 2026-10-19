@@ -1,8 +1,16 @@
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def default_model_dir():
+    if getattr(sys, 'frozen', False):
+        from platformdirs import user_cache_path
+        return user_cache_path('KnowledgeCompass', appauthor=False) / 'models/faster-whisper-small'
+    return ROOT / 'models/faster-whisper-small'
 
 
 @dataclass
@@ -14,5 +22,5 @@ class Config:
     mode: str = field(default_factory=lambda: os.environ.get('LLM_MODE', 'live'))
     timeout: float = 60
     live_limit: int = field(default_factory=lambda: int(os.environ.get('LLM_MAX_REQUESTS', '3')))
-    asr_model_dir: Path = field(default_factory=lambda: Path(os.environ.get('LIANZHI_ASR_MODEL_DIR') or ROOT / 'models/faster-whisper-small'))
+    asr_model_dir: Path = field(default_factory=lambda: Path(os.environ.get('LIANZHI_ASR_MODEL_DIR') or default_model_dir()))
     asr_timeout: float = 600

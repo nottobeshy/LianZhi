@@ -1,3 +1,18 @@
+# 2026-10-19 Windows v0.1.0 候选封装（进行中）
+
+用户明确授权桌面封装、工程测试、本地Windows ZIP候选和后续Actions候选流程，取代历史“不批准桌面打包”的范围限制；未授权公开Release。保留现有FastAPI/原生前端/SQLite v3/ASR/WinVault，不改变业务。GitHub连接已确认账号nottobeshy，当前无本地remote且可见仓库不含炼知；未挪用quickkey-win11，仓库名称与自身许可证仍待确定。
+
+## 阶段0调研与阶段1当前实现
+
+- 实际研究pywebview/PyInstaller/hooks-contrib/platformdirs/setup-python/upload-artifact/action-gh-release及既有keyring/faster-whisper。可选fastapi-desktop源码和许可证抓取不足，不采用模板代码；匿名GitHub元数据接口失败，不编造维护日期。版本/许可证/用途/风险与来源见docs/releases/RESEARCH.md。
+- 新分支codex/windows-release，从已完成火焰提交5cbabad开始；只有原output/未跟踪内容，未覆盖、未修改sources或现有用户数据。
+- 独立.venv-release安装pywebview6.2.1、PyInstaller6.22.3、hooks2026.8、platformdirs4.13.5及requirements-asr原锁定依赖，pip check通过；4项desktop单测通过（4.23秒）。
+- 已写desktop入口/路径、packaging/LianZhi.spec与定向hooks、requirements-desktop.txt、构建/metadata/ZIP脚本。冻结后ASR通过共用依赖的LianZhi-worker.exe启动，保持原Job Object；windowed主程序不承担stdout协议。backend仅改版本0.1.0、冻结模型默认缓存与worker命令，无Schema/Prompt/前端重写。
+- 固定127.0.0.1:8765保持localStorage origin；窗口结束停止自己的服务，现有8000不动。数据/缓存/日志在用户目录，保留KnowledgeCompass身份；ASR显式下载固定small至用户缓存，ZIP不收开发模型或私人资料。本轮默认LLM_MAX_REQUESTS=0，历史3次额度用尽，不收费。
+- 当前首次打包和GUI尚未执行，不标已通过。下一步：完整测试→本地构建→解压候选/冻结ASR/凭据/窗口关闭重启→本地稳定后Actions配置。构建命令scripts/build_windows.ps1；细节与进度见docs/releases/TEST_REPORT.md。
+
+---
+
 # 2026-10-19 火焰罗盘正式集成（当前专项已完成）
 
 用户明确批准将独立Demo既有柔和SVG方案A、V2质感升级、强度80%、速度2.0×移植至正式首页与知识挑战；只做装饰与生命周期接线，不扩大业务范围。原型HTML/CSS/JS、后端、Schema v3、Prompt、词库、draw.js、sound.js、api.js、store.js与app.css保持不变。来源为 `prototypes/flame-compass/`，README已同步“独立Demo仍保留，正式前端已集成”，没有把调试面板带入产品。

@@ -1,3 +1,5 @@
+> 2026-10-19 Windows封装新授权：用户明确批准pywebview桌面入口、PyInstaller onedir、Windows ZIP候选、本地测试及本地稳定后的Actions候选构建；未授权公开Release。仅解除旧“未批准桌面打包”限制，不改Schema/业务/Key安全机制，不打包个人数据或开发模型。历史真实模型3次额度用尽，本轮保持0；候选和Stub不冒充真实AI/干净机器验收。每阶段更新既有HANDOFF，详见docs/releases/。
+
 > 2026-10-19 火焰正式集成实施记录：用户已明确批准既有柔和SVG方案A、V2、80%、2.0×集成首页和真实抽题，取代下文历史“不批准火焰集成”的限制，仅限本专项。现已完成共用视觉模块及原生命周期接线，不改后端/Schema/Prompt/词库/抽题结果；73项pytest、12个前端脚本、四屏宽/十次抽题浏览器验收及隔离真实ASR+明确Stub复盘重启通过。累计真实模型3次上限已用尽，本轮不收费，运行须保留原数据目录及LLM_MAX_REQUESTS=0。sources/仍只读，详见HANDOFF最新章节和docs/FLAME_COMPASS.md。
 
 > 2026-10-17 新授权：以 docs/MVP_TASK_V1.0.md 为本轮范围，用户明确授权阻塞修复、FastAPI + SQLite + 既有前端和最小AI挑战闭环。下文“未批准后端”是历史阶段，仅在本轮批准范围解除；不批准完整ASR、主题重构、火焰原型集成或全部旧PRD。DeepSeek deepseek-v4-pro / https://api.deepseek.com，真实调用最多3次，Key只在本机配置；跨进程累计不得超额。本轮真实调用累计1次并成功，最多3次；浏览器全流程仍待复验。保持其余协作约束及 sources/ 只读。

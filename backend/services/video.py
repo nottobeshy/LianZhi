@@ -50,7 +50,8 @@ class VideoService:
     def run_worker(self, video, probe=False):
         env = {k:v for k,v in os.environ.items() if not k.startswith(('LLM_', 'HF_TOKEN'))}
         env.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', PYTHONIOENCODING='utf-8')
-        command = [sys.executable, '-m', 'backend.asr_worker', '--video', str(video), '--model-dir', str(self.config.asr_model_dir)]
+        worker = [str(Path(sys.executable).with_name('LianZhi-worker.exe')), '--asr-worker'] if getattr(sys, 'frozen', False) else [sys.executable, '-m', 'backend.asr_worker']
+        command = worker + ['--video', str(video), '--model-dir', str(self.config.asr_model_dir)]
         if probe:
             command.append('--probe-only')
         with self.process_lock:

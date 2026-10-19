@@ -15,6 +15,7 @@ from .db import now
 from .services.video import VideoService
 from .video_routes import add_video_routes
 from .review_routes import add_review_routes
+from .version import VERSION
 
 
 def failure(code, message, status):
@@ -38,7 +39,7 @@ def create_app(config=None, llm=None):
             finally:
                 videos.close()
 
-    app = FastAPI(title='炼知 LianZhi', version='1.0.0', lifespan=lifespan)
+    app = FastAPI(title='炼知 LianZhi', version=VERSION, lifespan=lifespan)
     app.state.db = db
     app.state.config = config
     app.state.llm = llm
