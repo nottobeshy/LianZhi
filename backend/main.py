@@ -1,4 +1,5 @@
 import sqlite3
+import os
 from contextlib import asynccontextmanager
 from urllib.parse import urlsplit
 from fastapi import FastAPI, Request
@@ -22,7 +23,7 @@ def failure(code, message, status):
     return JSONResponse({'error': {'code': code, 'message': message}}, status_code=status)
 
 
-def create_app(config=None, llm=None):
+def create_app(config=None, llm=None, model_installer=None):
     config = config or Config()
     db = Database(config.data_dir)
     llm = llm or LLMService(config)
@@ -34,9 +35,11 @@ def create_app(config=None, llm=None):
             db.initialize()
             llm.credentials.restore()
             videos.media_dir.mkdir(parents=True, exist_ok=True)
+            if model_installer and os.environ.get('LIANZHI_AUTO_INSTALL_ASR','1')!='0':model_installer.start()
             try:
                 yield
             finally:
+                if model_installer:model_installer.close()
                 videos.close()
 
     app = FastAPI(title='炼知 LianZhi', version=VERSION, lifespan=lifespan)
@@ -95,7 +98,17 @@ def create_app(config=None, llm=None):
 
     @app.get('/api/health')
     def health():
-        return {'status': 'ok', 'app': 'LianZhi', 'database': 'ready', 'asr': videos.status(), 'llm': llm.status()}
+        asr=videos.status()
+        if model_installer:
+            asr['installation']=model_installer.status()
+            asr['available']=asr['available'] and asr['installation']['state']=='ready'
+        return {'status': 'ok', 'app': 'LianZhi', 'database': 'ready', 'asr': asr, 'llm': llm.status()}
+
+    if model_installer:
+        @app.post('/api/asr/model/install')
+        def install_model():
+            model_installer.start()
+            return health()['asr']
 
     @app.post('/api/challenges', status_code=201)
     def create(body: CreateChallenge):

@@ -23,7 +23,11 @@ git status --short
 
 ## 模型复现
 
-候选附“下载ASR模型.cmd”，内部调用冻结worker的--download-asr-model。固定repo=Systran/faster-whisper-small，revision=536b0662742c02347bc0e980a01041f333bce120，model.bin SHA256=3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671。token=False，不使用用户HF Token，联网下载仅在用户显式启动时进行。
+桌面首次启动自动后台安装缺失模型，界面显示进度并允许失败重试；已有有效模型校验后复用。仍附“下载ASR模型.cmd”用于排障，内部与自动安装共用冻结worker的--download-asr-model。固定repo=Systran/faster-whisper-small，revision=536b0662742c02347bc0e980a01041f333bce120，model.bin SHA256=3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671。token=False，子进程移除LLM/HF令牌环境变量，不发送用户媒体。
+
+自动安装由desktop/model_install.py管理受控子进程和30分钟上限；退出关闭Job Object。下载进入同卷`.download`暂存目录，校验后才改名启用；失败不发布半成品，原来不完整的模型目录保留为`.previous-*`备份。每个模型目录有跨进程锁，损坏暂存权重重试强制重新下载，普通未完成下载复用HF恢复机制。单独运行源码backend不自动下载；LIANZHI_AUTO_INSTALL_ASR=0可关闭桌面启动自动安装，但保留主动重试。
+
+桌面注入安装器后仅新增本机POST /api/asr/model/install（无任意URL/路径参数），复用既有同源/Host/请求体保护；health.asr附installation状态。前端局部更新状态容器/启动按钮/设置ASR标签，不重渲染密码、抽题或视频草稿；只在安装活动时轮询，页面隐藏暂停。原挑战/视频API协议与Schema不改。
 
 本轮已用冻结安装器下载到全新目录（未指向开发者models/，HF_HOME也全新），约26秒通过权重SHA；实际冻结ASR以该模型完成44.6秒MP4的5段识别。离线分发若后续需要单独模型ZIP，要从此固定下载流程产生并单独列许可/校验，不能直接复制开发者缓存作为正式来源。网络不可达仍可能导致安装失败，当前无镜像/离线包承诺。
 

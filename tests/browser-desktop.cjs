@@ -13,6 +13,16 @@ const {chromium}=require('playwright');
     await page.waitForFunction(()=>S.backend.ready);
     assert.ok(await page.evaluate(()=>!!window.chrome?.webview));
     assert.equal(await page.evaluate(()=>S.backend.llm.mode),'mock');
+    if(process.env.TEST_MODEL_FAILURE==='1'){
+      await page.waitForFunction(()=>S.backend.asr.installation.state==='failed',{},{timeout:45000});
+      await nav('settings');await page.locator('#llm-key').fill('fixture-unsaved-key');
+      await page.evaluate(()=>window.installTestKey=document.getElementById('llm-key'));
+      await page.locator('[data-action="asr:install"]').click();
+      await page.waitForFunction(()=>S.backend.asr.installation.state==='failed',{},{timeout:45000});
+      assert.equal(await page.locator('#llm-key').inputValue(),'fixture-unsaved-key');
+      assert.equal(await page.evaluate(()=>installTestKey===document.getElementById('llm-key')),true);
+      assert.deepEqual(errors,[]);console.log(JSON.stringify({offline_failure:true,retry:true,password_preserved:true,page_errors:errors}));return;
+    }
     if(process.env.TEST_RESTART==='1'){
       await nav('settings');assert.equal(await page.locator('#sound-volume').inputValue(),'37');
       assert.equal(await page.evaluate(()=>S.backend.llm.saved_key),true);
@@ -52,6 +62,7 @@ const {chromium}=require('playwright');
     await page.locator('[data-action="ch:submit-rev"]').click();await page.waitForFunction(()=>S.ch.step===8);
     assert.equal(await page.evaluate(()=>S.ch.remote.questions.origin.mode),'mock');
     await nav('review');await page.locator('#review-video-file').setInputFiles(process.env.LIANZHI_ASR_TEST_VIDEO);
+    await page.waitForFunction(()=>S.backend.asr.available,{},{timeout:180000});
     await page.locator('[data-action="rv:local-start"]').click();await page.locator('#segin-0').waitFor({timeout:180000});
     await page.locator('[data-action="rv:local-confirm"]').click();await page.waitForFunction(()=>!!S.rv.local.record.confirmed_version_id);
     await page.locator('#rv-review-consent').check();await page.locator('[data-action="rv:ai-review"]').click();
@@ -63,7 +74,8 @@ const {chromium}=require('playwright');
     await page.waitForFunction(()=>S.rv.local.reviews[0]?.user_script?.endsWith('（候选包编辑）'));
     await page.screenshot({path:process.env.TEST_SCREENSHOT});
     const result=await page.evaluate(()=>({video_id:S.rv.local.record.id,segments:S.rv.local.record.raw_transcript.segments.length,asr:S.rv.local.record.raw_transcript.engine,review_mode:S.rv.local.reviews[0].origin.mode}));
-    assert.equal(result.asr,'faster-whisper');assert.deepEqual(errors,[]);
+    result.model_installation=await page.evaluate(()=>S.backend.asr.installation.state);
+    assert.equal(result.model_installation,'ready');assert.equal(result.asr,'faster-whisper');assert.deepEqual(errors,[]);
     console.log(JSON.stringify({...result,window:'WebView2',challenge:true,import:true,timer:true,vault:true,page_errors:errors}));
   }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

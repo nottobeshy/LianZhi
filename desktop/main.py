@@ -24,13 +24,16 @@ class LocalServer:
     def start(self):
         import uvicorn
         from backend.main import create_app
+        from backend.config import Config
+        from .model_install import ModelInstaller
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if os.name == 'nt':
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
         self.socket.bind(('127.0.0.1', self.port))
         self.socket.listen(128)
         self.port = self.socket.getsockname()[1]
-        self.server = uvicorn.Server(uvicorn.Config(create_app(), host='127.0.0.1', port=self.port,
+        config=Config()
+        self.server = uvicorn.Server(uvicorn.Config(create_app(config,model_installer=ModelInstaller(config.asr_model_dir)), host='127.0.0.1', port=self.port,
             # Windows Proactor transports can retain reset WebView connections on shutdown.
             # ASR uses controlled synchronous subprocesses, so a socket-only selector loop suffices.
             log_config=None, access_log=False, log_level='warning', loop='asyncio:SelectorEventLoop',

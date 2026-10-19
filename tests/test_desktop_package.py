@@ -24,14 +24,17 @@ def test_actual_webview_package_restart_and_local_asr(tmp_path,request):
     env={k:v for k,v in os.environ.items() if not k.startswith(('LLM_','LIANZHI_','HF_','PYTHON','VIRTUAL_ENV'))}
     env['PATH']=os.environ['SYSTEMROOT']+'\\System32;'+os.environ['SYSTEMROOT']
     ready=tmp_path/'ready.json';close=tmp_path/'close';port=free_port();debug=free_port()
-    env.update(LLM_MODE='mock',LLM_MAX_REQUESTS='0',LIANZHI_DATA_DIR=str(tmp_path/'用户 数据'),
+    model=tmp_path/'自动模型 缓存/models/faster-whisper-small' if os.environ.get('LIANZHI_PACKAGE_AUTO_MODEL')=='1' else Path(os.environ['LIANZHI_PACKAGE_MODEL'])
+    env.update(LLM_MODE='mock',LLM_MAX_REQUESTS='0',HF_HOME=str(tmp_path/'全新HF缓存'),LIANZHI_DATA_DIR=str(tmp_path/'用户 数据'),
         LIANZHI_CACHE_DIR=str(tmp_path/'浏览器 缓存'),LIANZHI_LOG_DIR=str(tmp_path/'日志'),
-        LIANZHI_ASR_MODEL_DIR=os.environ['LIANZHI_PACKAGE_MODEL'],LIANZHI_DESKTOP_TEST='1',
+        LIANZHI_ASR_MODEL_DIR=str(model),LIANZHI_DESKTOP_TEST='1',
         LIANZHI_READY_FILE=str(ready),LIANZHI_CLOSE_FILE=str(close),LIANZHI_DESKTOP_PORT=str(port),LIANZHI_DEBUG_PORT=str(debug))
     results=[]
     from backend.services.credentials import CredentialStore
     request.addfinalizer(lambda:CredentialStore(tmp_path/'用户 数据').delete('https://api.deepseek.com'))
     for restart in [False,True]:
+        if not restart and os.environ.get('LIANZHI_PACKAGE_AUTO_MODEL')=='1':assert not model.exists(),'Automatic install test must start without a model'
+        if restart:env['HF_HUB_OFFLINE']='1'  # Verified model must restart without another download.
         ready.unlink(missing_ok=True);close.unlink(missing_ok=True)
         process=subprocess.Popen([str(exe)],cwd=tmp_path,env=env,creationflags=subprocess.CREATE_NO_WINDOW)
         try:
@@ -63,3 +66,33 @@ def test_actual_webview_package_restart_and_local_asr(tmp_path,request):
     assert 'ERROR' not in (tmp_path/'日志/desktop.log').read_text(encoding='utf-8'), 'Desktop log contains errors; inspect isolated evidence'
     assert {p.relative_to(exe.parent).as_posix() for p in exe.parent.rglob('*') if p.is_file()}==package_files, 'Runtime files appeared inside installation directory'
     print('Actual frozen WebView2 / ASR / vault / restart:',json.dumps(results))
+
+
+@pytest.mark.skipif(not os.environ.get('LIANZHI_DESKTOP_EXE'),reason='Opt-in actual desktop EXE required')
+def test_offline_model_failure_retry_keeps_window_and_inputs(tmp_path):
+    exe=Path(os.environ['LIANZHI_DESKTOP_EXE']).resolve();root=Path(__file__).resolve().parent.parent
+    env={k:v for k,v in os.environ.items() if not k.startswith(('LLM_','LIANZHI_','HF_','PYTHON','VIRTUAL_ENV'))}
+    ready=tmp_path/'ready.json';close=tmp_path/'close';debug=free_port()
+    env.update(LLM_MODE='mock',LLM_MAX_REQUESTS='0',HF_HUB_OFFLINE='1',HF_HOME=str(tmp_path/'hf'),
+        LIANZHI_DATA_DIR=str(tmp_path/'data'),LIANZHI_CACHE_DIR=str(tmp_path/'cache'),LIANZHI_LOG_DIR=str(tmp_path/'logs'),
+        LIANZHI_ASR_MODEL_DIR=str(tmp_path/'missing-model'),LIANZHI_DESKTOP_TEST='1',LIANZHI_READY_FILE=str(ready),
+        LIANZHI_CLOSE_FILE=str(close),LIANZHI_DESKTOP_PORT=str(free_port()),LIANZHI_DEBUG_PORT=str(debug))
+    process=subprocess.Popen([str(exe)],cwd=tmp_path,env=env,creationflags=subprocess.CREATE_NO_WINDOW)
+    try:
+        deadline=time.monotonic()+45
+        while not ready.exists():
+            assert process.poll() is None and time.monotonic()<deadline
+            time.sleep(.1)
+        info=json.loads(ready.read_text(encoding='utf-8'))
+        result=subprocess.run([shutil.which('node'),str(root/'tests/browser-desktop.cjs')],env={**os.environ,
+            'TEST_BASE_URL':info['url'].rstrip('/'),'TEST_CDP_URL':f'http://127.0.0.1:{debug}','TEST_MODEL_FAILURE':'1'},
+            capture_output=True,text=True,encoding='utf-8',timeout=100)
+        assert result.returncode==0,result.stderr
+        (tmp_path/'offline-evidence.json').write_text(result.stdout,encoding='utf-8')
+        close.write_text('close');assert process.wait(timeout=20)==0
+        assert 'ERROR' not in (tmp_path/'logs/desktop.log').read_text(encoding='utf-8')
+    finally:
+        close.write_text('close')
+        if process.poll() is None:
+            try:process.wait(timeout=20)
+            except subprocess.TimeoutExpired:process.kill();process.wait(timeout=5)

@@ -1,3 +1,5 @@
+> 2026-10-19 自动安装专项：桌面缺失模型时后台安装固定small，失败可重试，现有CLI保留。新增tests/test_model_install.py与demo/tests/test-model-install.js；显式包体验收可设LIANZHI_PACKAGE_AUTO_MODEL=1，在空模型/全新HF缓存中实际自动安装，随后断网重启复用，并另外验收离线失败/重试/输入保留。常规与实际包结果见最新HANDOFF。
+
 # Windows独立复现说明（2026-10-17）
 
 ## 2026-10-19 桌面候选复现

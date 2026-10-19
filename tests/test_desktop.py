@@ -56,6 +56,7 @@ def test_desktop_paths_do_not_write_bundle(tmp_path,monkeypatch):
 def test_local_server_lifecycle(tmp_path,monkeypatch):
     pytest.importorskip('platformdirs')
     from desktop.main import LocalServer
+    monkeypatch.setenv('LIANZHI_AUTO_INSTALL_ASR','0')
     monkeypatch.setenv('LIANZHI_DATA_DIR',str(tmp_path))
     monkeypatch.setenv('LLM_MODE','mock');monkeypatch.setenv('LLM_API_KEY','')
     server=LocalServer(0)

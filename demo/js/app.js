@@ -95,9 +95,11 @@ function render() {
     <nav class="kc-nav" aria-label="主导航">${NAV.map(([k, l]) =>
       `<button data-action="nav" data-view="${k}" class="${S.view === k ? 'active' : ''}" aria-current="${S.view === k ? 'page' : 'false'}">${l}${k === 'works' && S.works.length ? ' · ' + S.works.length : ''}</button>`).join('')}</nav>
   </div></header>
-  <main class="kc-main">${S.backend.error ? `<div class="kc-wrap"><div class="kc-errbox" style="display:block" role="alert">${esc(S.backend.error)}</div></div>` : ''}${(VIEWS[S.view] || vHome)()}</main>
+  <main class="kc-main"><div class="kc-wrap" id="asr-install-status"></div>${S.backend.error ? `<div class="kc-wrap"><div class="kc-errbox" style="display:block" role="alert">${esc(S.backend.error)}</div></div>` : ''}${(VIEWS[S.view] || vHome)()}</main>
   <footer class="kc-footer">炼知 · 思考在前，AI 在后 · 词库保存在本机浏览器；HTTP 模式的挑战与已保存视频转写存入 SQLite。未提交草稿和倒计时仍为内存状态。</footer>`;
   bindFileInputs();
+  const modelStatus=document.getElementById('asr-install-status');
+  if(modelStatus)modelStatus.innerHTML=asrInstallHtml();
   if(typeof FlameCompass!=='undefined')FlameCompass.mountAll(app);
   syncLearningTimer();
   AppAPI.syncVideoPolling();
@@ -297,6 +299,7 @@ app.addEventListener('click', e => {
       const v = Store.getActiveVocab(); if (!v || v.builtin) return;
       Store.toggleTerm(v.id, d.id); render(); break;
     }
+    case 'asr:install': AppAPI.installModel(); break;
     case 'ch:draw': beginDraw(); break;
     case 'ch:open-card': S.ch.step = 2; render(); break;
     case 'ch:redraw': S.ch.redrawOnce = true; beginDraw(); break;

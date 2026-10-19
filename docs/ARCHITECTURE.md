@@ -1,3 +1,5 @@
+> 2026-10-19 ASR自动安装：desktop.ModelInstaller在桌面应用lifespan内管理受控下载worker，退出关闭Job Object；health附安装状态，新增桌面专用同源重试端点。固定模型、原子启用与跨进程锁由共用下载器负责。前端局部更新安装提示，不重绘业务草稿/Key；原API与Schema不变，源码backend独立运行不启动安装器。
+
 # 炼知MVP架构（2026-10-17实际实现）
 
 ## 2026-10-19 Windows v0.1.0 候选架构

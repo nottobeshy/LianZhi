@@ -21,7 +21,7 @@ const AppAPI = (() => {
   const refresh = () => { if (!(S.view==='challenge' && S.ch.step===1 && !S.ch.drawDone)) render(); };
   async function init() {
     if (!enabled) return;
-    try { const health=await request('/health'); S.backend.ready=true; S.backend.llm=health.llm; S.backend.asr=health.asr; }
+    try { const health=await request('/health'); S.backend.ready=true; S.backend.llm=health.llm; applyModelStatus(health.asr); }
     catch(e) { S.backend.error=e.message; }
     // Avoid destroying a just-started draw or an in-progress password input.
     if (S.view==='home') refresh();
@@ -144,6 +144,7 @@ const AppAPI = (() => {
   async function startVideo() {
     const local=S.rv.local;
     if(local.busy)return;
+    if(S.backend.asr?.installation && !S.backend.asr.available){local.error='本地语音模型尚未就绪，请等待安装完成或重试安装。';render();return;}
     local.busy=true;local.error='';render();
     try{
       if(local.file){
@@ -215,7 +216,38 @@ const AppAPI = (() => {
     const note=document.getElementById('rv-review-note');if(note)note.textContent=local.reviewNote;
   }
   let videoPoll=null,videoPolling=false;
+  let modelPoll=null,modelPolling=false;
+  function applyModelStatus(asr) {
+    S.backend.asr=asr;
+    const banner=document.getElementById('asr-install-status');
+    if(banner)banner.innerHTML=asrInstallHtml();
+    const status=document.getElementById('asr-local-state');
+    if(status)status.innerHTML=st(asr.available?'done':'wait',asr.available?'faster-whisper small · CPU INT8（文件存在，运行时校验）':'未就绪，请查看模型安装状态');
+    const button=document.querySelector?.('[data-action="rv:local-start"]');
+    if(button)button.disabled=S.rv.local.busy || (!!asr.installation && !asr.available);
+    syncModelPolling();
+  }
+  function syncModelPolling() {
+    const active=enabled && !document.hidden && ['checking','downloading','verifying'].includes(S.backend.asr?.installation?.state);
+    if(!active){if(modelPoll)clearTimeout(modelPoll);modelPoll=null;return;}
+    if(modelPoll || modelPolling)return;
+    modelPoll=setTimeout(async()=>{
+      modelPoll=null;modelPolling=true;
+      try{applyModelStatus((await request('/health')).asr);}
+      catch(e){applyModelStatus({...S.backend.asr,installation:{state:'failed',message:e.message}});}
+      finally{modelPolling=false;syncModelPolling();}
+    },1000);
+  }
+  async function installModel() {
+    if(!enabled || modelPolling)return;
+    applyModelStatus({...S.backend.asr,available:false,installation:{state:'checking',message:'正在启动模型安装…'}});
+    try{applyModelStatus(await request('/asr/model/install',{}));}
+    catch(e){applyModelStatus({...S.backend.asr,installation:{state:'failed',message:e.message}});}
+  }
+  document.addEventListener?.('visibilitychange',syncModelPolling);
+  window.addEventListener?.('pagehide',()=>{if(modelPoll)clearTimeout(modelPoll);modelPoll=null;});
   function syncVideoPolling() {
+    syncModelPolling();
     const local=S.rv.local;
     const active=enabled && S.view==='review' && local.record?.state==='running' && !local.pollFailed;
     if(!active){if(videoPoll)clearTimeout(videoPoll);videoPoll=null;return;}
@@ -234,5 +266,5 @@ const AppAPI = (() => {
     },1200);
   }
   return {enabled,request,init,saveExplanation,generateQuestions,saveAnswers,saveRevision,loadWorks,settings,clearKey,examples,remove,
-    loadVideos,openVideo,startVideo,saveTranscript,syncVideoPolling,reviewVideo,saveReviewScript,copyReview,loadVideoReviews};
+    loadVideos,openVideo,startVideo,saveTranscript,syncVideoPolling,reviewVideo,saveReviewScript,copyReview,loadVideoReviews,installModel};
 })();

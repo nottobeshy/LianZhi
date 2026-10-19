@@ -1,3 +1,5 @@
+> 2026-10-19 自动ASR安装授权：用户已表示候选基本无问题、允许继续，并建议增加ASR模型自动安装。仅在桌面壳中批准首次缺失模型后台安装、状态/进度、失败重试、校验启用及退出清理，解除该范围内旧“仅显式下载”限制；源码backend仍不自动联网。固定small/commit/SHA，不外发媒体或Key、不改Schema/模型Prompt，LLM额度仍0。公开Release与自身源码许可证尚待确认。
+
 > 2026-10-19 Windows封装授权与结果：用户明确批准pywebview桌面入口、PyInstaller onedir、Windows ZIP候选、本地测试及本地稳定后的Actions候选构建；未授权公开Release。已通过实际WebView2/冻结ASR/Stub挑战与文案/WinVault/SQLite/音量词库/关闭重启及C盘中文空格解压测试，79项常规测试+12个前端脚本通过。仅解除旧“未批准桌面打包”限制，不改Schema/业务/Key安全机制，不打包个人数据或开发模型。历史真实模型3次额度用尽，本轮保持0；候选和Stub不冒充真实AI/干净机器验收。Actions为待配置执行的Windows自托管候选流程（setup-python无Windows3.12.14），不标CI通过。每阶段更新既有HANDOFF，详见docs/releases/。
 
 > 2026-10-19 火焰正式集成实施记录：用户已明确批准既有柔和SVG方案A、V2、80%、2.0×集成首页和真实抽题，取代下文历史“不批准火焰集成”的限制，仅限本专项。现已完成共用视觉模块及原生命周期接线，不改后端/Schema/Prompt/词库/抽题结果；73项pytest、12个前端脚本、四屏宽/十次抽题浏览器验收及隔离真实ASR+明确Stub复盘重启通过。累计真实模型3次上限已用尽，本轮不收费，运行须保留原数据目录及LLM_MAX_REQUESTS=0。sources/仍只读，详见HANDOFF最新章节和docs/FLAME_COMPASS.md。

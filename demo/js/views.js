@@ -558,6 +558,14 @@ function localVideoReviewHtml(v,l) {
   </div>`;
 }
 
+function asrInstallHtml() {
+  const info=S.backend.asr?.installation;
+  if(!info || info.state==='ready')return '';
+  const busy=['checking','downloading','verifying'].includes(info.state);
+  const progress=Number.isFinite(info.total) && Number.isFinite(info.downloaded) && info.total>0?`<progress max="${info.total}" value="${info.downloaded}"></progress> ${(info.downloaded/1048576).toFixed(1)} / ${(info.total/1048576).toFixed(1)} MiB`:'<progress aria-label="模型安装中"></progress>';
+  return `<div class="kc-warnbox" role="status"><b>${esc(info.message)}</b><p>仅从官方 Hugging Face 下载固定版本 small 模型，不上传视频或API Key；安装完成后自动启用本地转写。</p>${busy?progress:'<button class="kc-btn sm" data-action="asr:install">安装 / 重试</button>'}</div>`;
+}
+
 function vLocalReview() {
   const r=S.rv,l=r.local,v=l.record,raw=v?.raw_transcript;
   const confirmed=!!v?.confirmed_version_id && !l.dirty;
@@ -569,7 +577,7 @@ function vLocalReview() {
       <label for="review-video-file">选择MP4<input class="kc-input" id="review-video-file" type="file" accept=".mp4,video/mp4" ${l.busy || l.reviewBusy?'disabled':''}></label>
       <p class="kc-mut">单人普通话 · 最长3分钟 · 最大100 MiB。实际容器、视频帧、音轨与时长在本机校验；原视频复制到应用数据目录，不上传云端。无需知识挑战或API Key。</p>
       ${l.file?`<p>${esc(l.file.name)} · ${(l.file.size/1048576).toFixed(2)} MiB</p>`:''}
-      ${l.file || (v && !raw && v.state!=='running')?`<button class="kc-btn primary" data-action="rv:local-start" ${l.busy?'disabled':''}>${l.busy?'正在上传/提交…':l.file?'上传并启动本地转写':'启动 / 重试本地转写'}</button>`:''}
+      ${l.file || (v && !raw && v.state!=='running')?`<button class="kc-btn primary" data-action="rv:local-start" ${l.busy || (S.backend.asr?.installation && !S.backend.asr.available)?'disabled':''}>${l.busy?'正在上传/提交…':l.file?'上传并启动本地转写':'启动 / 重试本地转写'}</button>`:''}
       ${l.error?`<div class="kc-errbox" style="display:block" role="alert">${esc(l.error)}</div>`:''}
     </div>
     ${v?`<div class="kc-card"><div class="kc-h">${esc(v.name)} ${st(v.state==='running'?'load':v.error?'fail':'done',stateLabel[v.state] || v.state)}</div>
@@ -743,7 +751,7 @@ function vSettings() {
     <div class="kc-card"><div class="kc-h">本地依赖 ${mockTag()}</div>
       <dl class="kc-kv">
         <dt>FFmpeg</dt><dd>${AppAPI.enabled?st('wait','本轮未接入'):st('done', '已检测')}</dd>
-        <dt>本地 ASR</dt><dd>${AppAPI.enabled?st(S.backend.asr?.available?'done':'wait',S.backend.asr?.available?'faster-whisper small · CPU INT8（文件存在，运行时校验）':'未就绪，请按ASR说明安装引擎/模型'):st('done', 'faster-whisper small · int8')}</dd>
+        <dt>本地 ASR</dt><dd id="asr-local-state">${AppAPI.enabled?st(S.backend.asr?.available?'done':'wait',S.backend.asr?.available?'faster-whisper small · CPU INT8（文件存在，运行时校验）':'未就绪，请查看模型安装状态'):st('done', 'faster-whisper small · int8')}</dd>
         <dt>SQLite</dt><dd>${AppAPI.enabled?st(S.backend.ready?'done':'fail',S.backend.ready?'本地 API 已连接':'本地 API 未连接'):st('done', '可用')}</dd>
         <dt>大模型 API</dt><dd>${AppAPI.enabled?originTag(S.backend.llm?.mode==='mock'?{mode:'mock'}:S.backend.llm?.configured?{mode:'live',provider:'已配置',model:S.backend.llm.model}:null):st('fail', '未配置')}</dd>
       </dl>
