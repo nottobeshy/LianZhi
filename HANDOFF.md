@@ -1,3 +1,15 @@
+# 2026-10-19 GitHub仓库与MIT许可准备
+
+用户明确指定仓库名LianZhi、自身源码MIT，目标nottobeshy/LianZhi。已通过本机Git Credential Manager验证账号并创建 **私有** 仓库：https://github.com/nottobeshy/LianZhi 。不公开仓库、不创建Release、不新建发布标签、不发真实AI请求。连接器没有建仓工具，浏览器自动化两次初始化因沙箱运行时失败；最终通过标准Git凭据和GitHub官方API成功，令牌仅进程内使用，未显示或落盘。
+
+新增根LICENSE（MIT，2026 nottobeshy），构建脚本增加复制LICENSE；同步README、AGENTS、BUILD、THIRD_PARTY、Release Notes本轮决定，替代“自身许可证/仓库名待定”。第三方依赖、模型和素材许可不因此改变，native分发审核仍待完成。MIT文本参考OSI官方页面；尚不把该许可宣称为全部二进制的统一许可。
+
+私有推送前检查HEAD可达327个Git对象，未发现私人媒体/数据库/模型/Key文件名或常见token/私钥模式；只是模式检查，不声称完整秘密审计。sources/与原output/未动，无合并冲突；原8000与用户数据不动。本轮仅许可、文档和构建复制指令，不重跑业务测试；既有a6bd646候选保持原字节/原测试结论，旧ZIP没有新LICENSE，不将当前提交冒充旧候选源码。下一次候选须从含许可证的新SHA重建并复验。
+
+仓库创建成功，源码推送结果待下方补记；现有源码分支codex/windows-release，将推送到远端main并保留完整历史和a6bd646候选提交。仍待独立干净Windows、额外真实AI授权、自托管CI和native分发审查；公开Release必须另获明确授权。
+
+---
+
 # 2026-10-19 ASR模型自动安装（已实现并实际验收）
 
 ## 最终候选复验与交付

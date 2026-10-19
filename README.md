@@ -1,10 +1,12 @@
 # 炼知 · LianZhi
 
+项目自身源码采用 [MIT License](LICENSE)，版权署名为 nottobeshy（2026）；第三方依赖、模型及素材沿用各自许可，见[分发核查](docs/releases/THIRD_PARTY.md)。[GitHub源码仓库](https://github.com/nottobeshy/LianZhi)已创建为私有，需授权账号访问；正式Release未发布。最新推送与制品状态见 HANDOFF.md。
+
 ## Windows v0.1.0 候选包（2026-10-19，未公开发布）
 
 已实现pywebview + PyInstaller onedir桌面壳，保持现有FastAPI/原生前端/SQLite/ASR/WinVault。Windows11本机实际EXE/WebView2、C盘中文空格目录解压、冻结ASR、Stub挑战/文案、持久化与窗口重启验收通过。ZIP不含私人视频/数据库/Key/开发模型。用户验收后批准新增ASR自动安装：桌面首次启动后台下载缺失的固定small模型并校验，显示进度、失败可重试，成功自动启用；已有有效模型不重复下载，源码后端仍不自动联网。
 
-本地候选、SHA和同提交源码ZIP由 `scripts/build_windows.ps1` 生成至 `release-artifacts/`。详细见[使用说明](docs/releases/WINDOWS_QUICKSTART.md)、[源码构建与Actions限制](docs/releases/BUILD.md)、[测试记录](docs/releases/TEST_REPORT.md)、[开源项目评估](docs/releases/RESEARCH.md)、[Release Notes草稿](docs/releases/v0.1.0.md)。本轮模型额度仍0，没有再次真实AI请求；独立全新Windows/人工双击/第三方native许可审核待完成。GitHub连接已登录nottobeshy，源码仓库尚未关联，Release未发布；不提供不存在的远程链接。
+本地候选、SHA和同提交源码ZIP由 `scripts/build_windows.ps1` 生成至 `release-artifacts/`。详细见[使用说明](docs/releases/WINDOWS_QUICKSTART.md)、[源码构建与Actions限制](docs/releases/BUILD.md)、[测试记录](docs/releases/TEST_REPORT.md)、[开源项目评估](docs/releases/RESEARCH.md)、[Release Notes草稿](docs/releases/v0.1.0.md)。本轮模型额度仍0，没有再次真实AI请求；独立全新Windows/人工双击/第三方native许可审核待完成。已创建私有nottobeshy/LianZhi；没有已发布Release或公开下载资产。
 
 ## 火焰罗盘已正式集成（2026-10-19）
 

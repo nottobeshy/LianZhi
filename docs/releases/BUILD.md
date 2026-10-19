@@ -55,6 +55,6 @@ $env:LIANZHI_ASR_TEST_VIDEO='C:\本地验收素材\中文讲解.mp4'
 
 ## GitHub与正式公开发布
 
-连接账号nottobeshy已确认，本地尚无remote；未使用其他项目quickkey-win11。仓库名/自身许可证待用户确定；目前不制造不存在的源码或Releases链接。允许审查的源码以候选build-info完整SHA为准，公开前检查Git历史、私人素材与许可。
+用户已确定目标仓库nottobeshy/LianZhi、自身源码MIT（根LICENSE）；先私有建仓/推送，实际结果以HANDOFF最新记录为准。未使用其他项目quickkey-win11，未公开Release。允许审查的源码以候选build-info完整SHA为准，公开前检查Git历史、私人素材与许可；后续构建把根LICENSE一并复制到软件目录。已验收a6bd646候选保持原字节，不将新许可文件静默塞入旧ZIP。
 
 正式发布需用户确认候选和公开授权；将v0.1.0指向被验收提交，校验ZIP/SHA/notes/测试报告对应关系。之后才考虑softprops/action-gh-release（仅发布job给contents:write，先draft或受保护environment人工门槛）。当前没有公开发布自动化，无写GitHub令牌权限。

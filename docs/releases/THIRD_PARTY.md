@@ -9,4 +9,4 @@
 - small模型为Systran固定commit，原始Whisper许可MIT；下载器保存MODEL_INFO.json与上游README。没有将开发者本机缓存当发行资源。
 - WebView2 Runtime不打入ZIP；用户从微软安装，运行库分发遵守微软条款。
 
-**当前自身源码许可证尚待用户指定，native许可证分发核查未完成，是公开发布门槛。** 本地候选不等于已获准公开分发全部第三方二进制。
+**用户已确定项目自身源码采用MIT，见根目录LICENSE（2026 nottobeshy）。** 该许可证不替代第三方依赖、模型或素材的原许可。Windows构建会复制根LICENSE至软件目录；此前a6bd646候选生成时尚未有此文件，不应声称旧ZIP已包含它。native许可证分发核查仍未完成，是公开发布门槛；本地候选不等于已获准公开分发全部第三方二进制。MIT文本依据[OSI官方版本](https://opensource.org/license/mit)。

@@ -31,6 +31,7 @@ Copy-Item -LiteralPath docs/releases/WINDOWS_QUICKSTART.md -Destination (Join-Pa
 Copy-Item -LiteralPath docs/releases/v0.1.0.md -Destination (Join-Path $app 'Release-Notes.md')
 Copy-Item -LiteralPath docs/releases/TEST_REPORT.md -Destination $app
 Copy-Item -LiteralPath docs/releases/THIRD_PARTY.md -Destination $app
+Copy-Item -LiteralPath LICENSE -Destination $app
 & $pythonExe -m scripts.package_windows
 if ($LASTEXITCODE) {throw 'ZIP validation failed'}
 Write-Output "Candidate built from commit $($metadata.commit); GUI/clean-machine acceptance remains a separate gate."
