@@ -1,5 +1,13 @@
 # 炼知MVP架构（2026-10-17实际实现）
 
+## 2026-10-19 Windows v0.1.0 候选架构
+
+桌面入口desktop_entry.py调用desktop/main.py，WinForms/WebView2主线程加载自有127.0.0.1:8765，Uvicorn在专用线程；使用局部Selector循环解决实际Windows连接重置收尾问题，关闭窗口退出服务。无需业务JS桥，原FastAPI路由及前端仍同源；仅应用版本改0.1.0，Schema v3与Prompt不变。原开发入口8000仍保留。
+
+PyInstaller onedir包含只读demo与backend/data；ROOT基于模块__file__同时适配源码和_internal，不从当前工作目录读取资源。主EXE无控制台，ASR改由同目录LianZhi-worker.exe（Console/隐藏启动）走原Job Object/管道协议；两EXE共用依赖。定向hooks处理WinVault/pywin32-ctypes别名/CTranslate2 DLL，复用上游PyAV/onnxruntime等hooks，未用collect_all。
+
+platformdirs把数据/配置/缓存/日志定位到用户目录，保留KnowledgeCompass/data_dir的凭据身份。冻结模型默认用户缓存，显式安装器固定下载小模型并校验；源码原默认models路径不变。Release无个人数据库、媒体或Key。完整方案、版本/许可、依赖体积、当前CI的Python分发限制及实测边界见[Windows构建](releases/BUILD.md)、[开源评估](releases/RESEARCH.md)和[测试报告](releases/TEST_REPORT.md)。尚无公开Release。
+
 ## 2026-10-19 火焰正式集成
 
 `demo/js/flame.js` 封装独立Demo已确认的柔和SVG V2（80%/2×），首页/抽题复用；flame.css只作用装饰层。app.js只在原draw生命周期通知start/setPhase/lock/idle，picker、draw.js业务时序与音效不改。compass.js注入共享帧调度器，指针和火焰独立订阅同一个原生RAF；hidden/减少动态暂停、切页/pagehide销毁，锁定卡重渲染复用原节点避免重复光效。初始化或绘制失败可降级，装饰层不截获点击。无后端/Schema/协议变化。来源、文件、实际测试与限制见[火焰集成说明](FLAME_COMPASS.md)。

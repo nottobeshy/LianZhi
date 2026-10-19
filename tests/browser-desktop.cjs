@@ -57,6 +57,8 @@ const {chromium}=require('playwright');
     await page.locator('#rv-review-consent').check();await page.locator('[data-action="rv:ai-review"]').click();
     await page.locator('#rv-review-script').waitFor();
     const review=await page.evaluate(()=>S.rv.local.reviews[0]);assert.equal(review.origin.mode,'mock');
+    await page.locator('[data-action="rv:review-copy"][data-kind="revised"]').click();
+    await page.waitForFunction(()=>document.getElementById('rv-review-note')?.textContent==='已复制到剪贴板。');
     await page.locator('#rv-review-script').fill(review.ai_script+'（候选包编辑）');await page.locator('[data-action="rv:review-save"]').click();
     await page.waitForFunction(()=>S.rv.local.reviews[0]?.user_script?.endsWith('（候选包编辑）'));
     await page.screenshot({path:process.env.TEST_SCREENSHOT});

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import zipfile
 import pefile
+import subprocess
 
 
 def main():
@@ -24,7 +25,19 @@ def main():
         for file in files:z.write(file,'LianZhi/'+file.relative_to(app).as_posix())
     with archive.open('rb') as f:digest=hashlib.file_digest(f,'sha256').hexdigest()
     archive.with_suffix('.zip.sha256').write_text(digest+'  '+archive.name+'\n',encoding='ascii')
-    manifest=dict(**info,zip=archive.name,sha256=digest,bytes=archive.stat().st_size,files=len(files),gui_acceptance='pending')
+    source=output/f"LianZhi-v{info['version']}-source.zip"
+    root=Path.cwd()
+    subprocess.run(['git','-c','safe.directory='+root.as_posix(),'archive','--format=zip','--prefix=LianZhi-source/',
+                    '--output='+str(source.resolve()),info['commit']],check=True)
+    with zipfile.ZipFile(source,'a',zipfile.ZIP_DEFLATED) as z:
+        for entry in z.infolist():
+            p=Path(entry.filename)
+            assert p.suffix.lower() not in forbidden and p.name not in ('.env','llm-settings.json','model.bin'), 'Private artifact found in source archive'
+        z.writestr('LianZhi-source/SOURCE_VERSION.json',json.dumps(info,indent=2))
+    with source.open('rb') as f:source_digest=hashlib.file_digest(f,'sha256').hexdigest()
+    source.with_suffix('.zip.sha256').write_text(source_digest+'  '+source.name+'\n',encoding='ascii')
+    manifest=dict(**info,zip=archive.name,sha256=digest,bytes=archive.stat().st_size,files=len(files),
+                  source_zip=source.name,source_sha256=source_digest,gui_acceptance='pending')
     (output/'candidate-manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     print(json.dumps(manifest))
 

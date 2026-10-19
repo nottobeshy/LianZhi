@@ -1,15 +1,28 @@
-# 2026-10-19 Windows v0.1.0 候选封装（进行中）
+# 2026-10-19 Windows v0.1.0 候选封装（本地已验证，未公开发布）
 
 用户明确授权桌面封装、工程测试、本地Windows ZIP候选和后续Actions候选流程，取代历史“不批准桌面打包”的范围限制；未授权公开Release。保留现有FastAPI/原生前端/SQLite v3/ASR/WinVault，不改变业务。GitHub连接已确认账号nottobeshy，当前无本地remote且可见仓库不含炼知；未挪用quickkey-win11，仓库名称与自身许可证仍待确定。
 
-## 阶段0调研与阶段1当前实现
+## 阶段1/2完成与阶段3/4准备（最新状态）
+
+- 本地onedir/ZIP已生成，主LianZhi.exe无控制台，worker管道探测及Windows AMD64/GUI版本资源通过；build-info绑定0.1.0/完整Git SHA/解释器，拒绝工程未提交文件。ZIP、SHA与同提交源码ZIP在release-artifacts/，不会将output/、models/、.test-runtime、Key、用户媒体或数据库打包。
+- 冻结安装器在全新HF_HOME/新模型目录实际下载固定Systran small commit，约26秒完成并验证权重SHA，随后实际包用这份新模型完成44.6秒MP4/5段中文ASR；没有拿开发models缓存代替交付来源。
+- 完整pytest **79 passed, 5 skipped in31.49s**；全部12前端脚本exit0。默认跳过的显式ASR/浏览器/包体验收不当常规通过；单独显式包体验收已运行。
+- 生产逻辑提交d588e37对应ZIP解压至C盘独立中文空格目录，EXE环境去除Python变量并将PATH限定Windows系统目录。**实际WebView2 GUI验收1 passed in40.21s**：词库导入/选择、计时、解释→明确Stub追问→回答→修正→SQLite、视频→冻结真实ASR→确认→明确Stub双版本→编辑保存、关闭窗口/服务端口退出→新进程启动→SQLite/WinVault/词库/37%音量/视频编辑稿恢复。page_errors=[]，日志无ERROR，云请求0，隔离假凭据最终清理。后续目录权限边界/元数据/文档/CI变动的最终包仍以同脚本再验，安全汇总关联最终manifest。
+- 保留实际失败：新增路径测试曾泄漏默认预算0导致20项MockTransport用例失败，隔离环境映射后修复；GUI脚本曾误假设导入即选中，改为显式点击原选择按钮；实测Windows Proactor连接重置导致服务收尾超时，改桌面局部Selector循环/5秒graceful/失败退出码并加入日志门槛后重验通过。未提升收费额度或改业务以绕过测试。
+- 本地稳定后新增.github/workflows/windows-candidate.yml，只workflow_dispatch、contents:read、14天Artifacts，无公开Release job。官方setup-python manifest没有Windows3.12.14，当前为需可信同版本解释器/LIANZHI_BUILD_PYTHON的隔离Windows自托管runner；云端未配置执行，不能写CI通过。未直接更换已验证解释器。action-gh-release仅研究，待公开授权才启用写权限。
+- 文档同步：本HANDOFF、AGENTS、README、docs/ARCHITECTURE、docs/REPRODUCE，以及docs/releases/RESEARCH、BUILD、TEST_REPORT、WINDOWS_QUICKSTART、THIRD_PARTY、v0.1.0草稿。实际新增代码为desktop_entry.py、desktop包、backend/version.py、packaging spec/3个定向hook、requirements-desktop、3个构建脚本、desktop单测/实际包体Python+Node验收；backend仅配置/版本/worker启动边界变化，未改Schema/Prompt/既有前端。
+- 剩余门槛：独立全新Windows与用户人工下载双击、新授权真实AI、缺运行库现场、扬声器/原生下载对话框、低配/长期中断、代码签名、项目自身许可证及native第三方公开分发审查。GitHub账号已确认nottobeshy；本地无remote、未创建源码仓库/公开Release，两个最终GitHub链接暂不存在。当前交付本地候选供用户审查后再决定公开。
+
+构建/复验：`.\scripts\build_windows.ps1`；实际包测试见docs/releases/BUILD.md。默认桌面端口8765、平台用户目录、候选LLM_MAX_REQUESTS=0；原8000开发服务/三条旧挑战/已有成功复盘仍保留。不要把不同数据目录合并或覆盖。工程分支codex/windows-release，无合并冲突、无推送。后续发布标签必须指向被验收包内SHA。
+
+## 阶段0调研与阶段1早期记录（保留过程）
 
 - 实际研究pywebview/PyInstaller/hooks-contrib/platformdirs/setup-python/upload-artifact/action-gh-release及既有keyring/faster-whisper。可选fastapi-desktop源码和许可证抓取不足，不采用模板代码；匿名GitHub元数据接口失败，不编造维护日期。版本/许可证/用途/风险与来源见docs/releases/RESEARCH.md。
 - 新分支codex/windows-release，从已完成火焰提交5cbabad开始；只有原output/未跟踪内容，未覆盖、未修改sources或现有用户数据。
 - 独立.venv-release安装pywebview6.2.1、PyInstaller6.22.3、hooks2026.8、platformdirs4.13.5及requirements-asr原锁定依赖，pip check通过；4项desktop单测通过（4.23秒）。
 - 已写desktop入口/路径、packaging/LianZhi.spec与定向hooks、requirements-desktop.txt、构建/metadata/ZIP脚本。冻结后ASR通过共用依赖的LianZhi-worker.exe启动，保持原Job Object；windowed主程序不承担stdout协议。backend仅改版本0.1.0、冻结模型默认缓存与worker命令，无Schema/Prompt/前端重写。
 - 固定127.0.0.1:8765保持localStorage origin；窗口结束停止自己的服务，现有8000不动。数据/缓存/日志在用户目录，保留KnowledgeCompass身份；ASR显式下载固定small至用户缓存，ZIP不收开发模型或私人资料。本轮默认LLM_MAX_REQUESTS=0，历史3次额度用尽，不收费。
-- 当前首次打包和GUI尚未执行，不标已通过。下一步：完整测试→本地构建→解压候选/冻结ASR/凭据/窗口关闭重启→本地稳定后Actions配置。构建命令scripts/build_windows.ps1；细节与进度见docs/releases/TEST_REPORT.md。
+- 当时首次打包和GUI尚未执行，后续真实结果见上方最新状态。构建命令scripts/build_windows.ps1；细节与进度见docs/releases/TEST_REPORT.md。
 
 ---
 

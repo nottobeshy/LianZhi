@@ -72,3 +72,21 @@ def test_local_server_lifecycle(tmp_path,monkeypatch):
     again=LocalServer(0)
     try:assert again.start()
     finally:again.close()
+
+
+def test_candidate_workflow_has_no_publish_trigger():
+    yaml=pytest.importorskip('yaml')
+    workflow=yaml.load((ROOT/'.github/workflows/windows-candidate.yml').read_text(encoding='utf-8'),Loader=yaml.BaseLoader)
+    assert set(workflow['on'])=={'workflow_dispatch'}
+    assert workflow['permissions']=={'contents':'read'}
+    assert workflow['jobs']['candidate']['runs-on']==['self-hosted','Windows','X64','lianzhi-candidate']
+    assert not any('action-gh-release' in step.get('uses','') for step in workflow['jobs']['candidate']['steps'])
+
+
+def test_desktop_permission_failure_is_explicit(monkeypatch):
+    pytest.importorskip('platformdirs')
+    import desktop.main as desktop
+    monkeypatch.setenv('LIANZHI_DESKTOP_TEST','1')
+    def denied():raise PermissionError('isolated permission fixture')
+    monkeypatch.setattr(desktop,'prepare',denied)
+    assert desktop.main()==1

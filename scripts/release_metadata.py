@@ -18,6 +18,8 @@ def main():
     target=Path('build/release-metadata');target.mkdir(parents=True,exist_ok=True)
     if git('diff','HEAD','--name-only'):
         raise SystemExit('Commit source changes before building; source/EXE identity must be reviewable.')
+    if git('ls-files','--others','--exclude-standard','--','backend','demo','desktop','desktop_entry.py','packaging','scripts','tests','docs','.github','requirements-desktop.txt'):
+        raise SystemExit('Untracked engineering files must be committed before building.')
     info=dict(version=VERSION,commit=git('rev-parse','HEAD'),candidate=True,python=sys.version.split()[0],platform='Windows-x64')
     (target/'build-info.json').write_text(json.dumps(info,indent=2),encoding='utf-8')
     version_tuple=tuple(map(int,VERSION.split('.')))+(0,)

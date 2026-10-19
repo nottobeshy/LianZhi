@@ -1,3 +1,5 @@
+> 2026-10-19 Windows候选：同一套demo资源已由PyInstaller白名单打包，pywebview通过自有FastAPI加载，无前端重写；固定桌面端口8765并使用用户浏览器缓存。实际包体WebView2/ASR/Stub挑战与复盘/SQLite/WinVault/关闭重启通过，详见[构建与验收](../docs/releases/BUILD.md)。原开发HTTP入口8000保留；未公开Release。
+
 > **2026-10-19 当前前端：柔和火焰V2已正式集成。** 首页及真实抽题共用 `js/flame.js` / `css/flame.css`（80%、2.0×），通过原 draw.js 生命周期联动，共享原生RAF，指针独立控制；重渲染复用、切页清理、减少动态支持均已验收。独立原型保留作视觉参考，正式产品无滑条/模式切换。四屏宽与10次自然抽题浏览器通过、page_errors=[]；现有11脚本与新增test-flame.js通过。正式HTTP模式包括FastAPI/SQLite/真实本地ASR及用户主动授权的文字AI复盘；下文“无真实Python”“未接入复盘”“火焰仅试验”等为历史阶段。完整状态/限制见[集成说明](../docs/FLAME_COMPASS.md)与根HANDOFF。真实请求累计3次额度用尽，本轮无收费请求。
 
 > 2026-10-18 真实视频转写阶段记录：HTTP视频页已改为本地MP4选择/上传/CPU ASR/分段编辑确认/SQLite/重启读取，静态file://仍Mock。原稿/确认版本保留，时间单位秒并局部转换显示，支持播放器时间定位。该阶段未改compass.js/draw.js/CSS/index或独立火焰试验；后续复盘与火焰以文首最新状态为准。[ASR安装与限制](../docs/ASR.md)。

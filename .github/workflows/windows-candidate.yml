@@ -1,0 +1,46 @@
+name: Windows candidate (manual, no Release)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    # setup-python's manifest has no Windows 3.12.14 binary. Provision this exact
+    # tested interpreter on an isolated trusted runner; do not silently change Python.
+    runs-on: [self-hosted, Windows, X64, lianzhi-candidate]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Prepare verified Python and build
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $buildPython = $env:LIANZHI_BUILD_PYTHON
+          if (-not $buildPython -or -not (Test-Path -LiteralPath $buildPython)) {
+            throw 'Runner must provide LIANZHI_BUILD_PYTHON: CPython 3.12.14 x64. See docs/releases/BUILD.md.'
+          }
+          Get-ChildItem Env:LLM_* | Remove-Item
+          Get-ChildItem Env:LIANZHI_* | Remove-Item
+          & $buildPython -m venv .venv-release
+          if ($LASTEXITCODE) {throw 'venv failed'}
+          & ./.venv-release/Scripts/python.exe -m pip install -r requirements-desktop.txt
+          if ($LASTEXITCODE) {throw 'Dependencies failed'}
+          & ./scripts/build_windows.ps1
+      - name: Frozen worker version smoke
+        run: |
+          & ./dist/LianZhi/LianZhi-worker.exe --version
+          if ($LASTEXITCODE) {throw 'Frozen worker failed'}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: LianZhi-v0.1.0-windows-x64-candidate-${{ github.sha }}
+          path: |
+            release-artifacts/*.zip
+            release-artifacts/*.sha256
+            release-artifacts/candidate-manifest.json
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

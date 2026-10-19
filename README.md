@@ -1,5 +1,11 @@
 # 炼知 · LianZhi
 
+## Windows v0.1.0 候选包（2026-10-19，未公开发布）
+
+已实现pywebview + PyInstaller onedir桌面壳，保持现有FastAPI/原生前端/SQLite/ASR/WinVault。Windows11本机实际EXE/WebView2、C盘中文空格目录解压、冻结ASR、Stub挑战/文案、持久化与窗口重启验收通过。ZIP不含私人视频/数据库/Key/开发模型；ASR通过包内命令显式下载固定版本并校验。
+
+本地候选、SHA和同提交源码ZIP由 `scripts/build_windows.ps1` 生成至 `release-artifacts/`。详细见[使用说明](docs/releases/WINDOWS_QUICKSTART.md)、[源码构建与Actions限制](docs/releases/BUILD.md)、[测试记录](docs/releases/TEST_REPORT.md)、[开源项目评估](docs/releases/RESEARCH.md)、[Release Notes草稿](docs/releases/v0.1.0.md)。本轮模型额度仍0，没有再次真实AI请求；独立全新Windows/人工双击/第三方native许可审核待完成。GitHub连接已登录nottobeshy，源码仓库尚未关联，Release未发布；不提供不存在的远程链接。
+
 ## 火焰罗盘已正式集成（2026-10-19）
 
 首页与知识挑战现共用已确认的柔和SVG火焰V2（强度80%、速度2.0×），原罗盘主体/指针、真实抽题与AI/SQLite/视频/设置能力保留。独立 `prototypes/flame-compass/` 继续作为视觉参考，正式动画在 `demo/js/flame.js` 与 `demo/css/flame.css`，不含试验控制面板。

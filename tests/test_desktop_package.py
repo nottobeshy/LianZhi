@@ -19,6 +19,7 @@ def free_port():
 def test_actual_webview_package_restart_and_local_asr(tmp_path,request):
     exe=Path(os.environ['LIANZHI_DESKTOP_EXE']).resolve()
     assert exe.is_file()
+    package_files={p.relative_to(exe.parent).as_posix() for p in exe.parent.rglob('*') if p.is_file()}
     root=Path(__file__).resolve().parent.parent
     env={k:v for k,v in os.environ.items() if not k.startswith(('LLM_','LIANZHI_','HF_','PYTHON','VIRTUAL_ENV'))}
     env['PATH']=os.environ['SYSTEMROOT']+'\\System32;'+os.environ['SYSTEMROOT']
@@ -60,4 +61,5 @@ def test_actual_webview_package_restart_and_local_asr(tmp_path,request):
                 except subprocess.TimeoutExpired:process.kill();process.wait(timeout=5)
     (tmp_path/'desktop-evidence.json').write_text(json.dumps(dict(build=info,results=results,cloud_requests=0),indent=2),encoding='utf-8')
     assert 'ERROR' not in (tmp_path/'日志/desktop.log').read_text(encoding='utf-8'), 'Desktop log contains errors; inspect isolated evidence'
+    assert {p.relative_to(exe.parent).as_posix() for p in exe.parent.rglob('*') if p.is_file()}==package_files, 'Runtime files appeared inside installation directory'
     print('Actual frozen WebView2 / ASR / vault / restart:',json.dumps(results))

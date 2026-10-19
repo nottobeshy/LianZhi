@@ -62,8 +62,13 @@ def build_info():
 
 
 def main():
-    paths = prepare()
-    handler = RotatingFileHandler(paths['logs']/'desktop.log', maxBytes=1024*1024, backupCount=2, encoding='utf-8')
+    try:
+        paths = prepare()
+        handler = RotatingFileHandler(paths['logs']/'desktop.log', maxBytes=1024*1024, backupCount=2, encoding='utf-8')
+    except OSError:
+        if os.name == 'nt' and os.environ.get('LIANZHI_DESKTOP_TEST') != '1':
+            ctypes.windll.user32.MessageBoxW(None, '无法写入炼知用户目录，请检查数据、缓存或日志目录权限。', '炼知启动失败', 0x10)
+        return 1
     logging.basicConfig(handlers=[handler], level=logging.WARNING, format='%(asctime)s %(levelname)s %(name)s %(message)s')
     server = LocalServer(int(os.environ.get('LIANZHI_DESKTOP_PORT', '8765')))
     status = 0

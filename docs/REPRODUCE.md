@@ -1,5 +1,11 @@
 # Windows独立复现说明（2026-10-17）
 
+## 2026-10-19 桌面候选复现
+
+本轮已新增桌面入口、PyInstaller spec、依赖锁定与Windows构建脚本；运行 `scripts/build_windows.ps1` 先测试再产onedir/ZIP/SHA/同提交源码ZIP，版本与Git SHA在build-info.json。完整环境、模型显式下载、实际WebView2验收和命令见[候选构建指南](releases/BUILD.md)，当前结果见[测试报告](releases/TEST_REPORT.md)。正式8000和旧数据仍保留，候选默认用户目录不含私人记录，不自动合并；Key仍由系统凭据保存。
+
+实际本机Windows11独立路径运行通过，不替代全新系统/人工双击验收。本轮没有更多真实AI额度。Actions候选配置仅手动/自托管Windows/contents:read，因setup-python没有Windows3.12.14构建，未伪称托管CI可用；尚未云端执行或公开发布。
+
 ## 2026-10-18 视频AI复盘与双版本
 
 按[VIDEO_REVIEW](VIDEO_REVIEW.md)确认真实状态、API、Prompt与Schema v3。当前本机服务继续使用`.test-runtime/browser`旧数据目录，三条旧挑战保留；不要用默认目录重启造成历史记录不显示，也不要将该目录当测试夹具删除。v2升级前app.pre-review-v2.db已生成，旧挑战(id,data)SHA256实测一致。新视频“知识讲解测试.mp4”10118319字节/44.6秒，真实本地ASR5段、校对确认并保留原稿。
