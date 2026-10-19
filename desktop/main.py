@@ -31,7 +31,10 @@ class LocalServer:
         self.socket.listen(128)
         self.port = self.socket.getsockname()[1]
         self.server = uvicorn.Server(uvicorn.Config(create_app(), host='127.0.0.1', port=self.port,
-            log_config=None, access_log=False, log_level='warning', loop='asyncio', http='h11', ws='none'))
+            # Windows Proactor transports can retain reset WebView connections on shutdown.
+            # ASR uses controlled synchronous subprocesses, so a socket-only selector loop suffices.
+            log_config=None, access_log=False, log_level='warning', loop='asyncio:SelectorEventLoop',
+            http='h11', ws='none', timeout_graceful_shutdown=5, timeout_keep_alive=2))
         self.thread = threading.Thread(target=self.server.run, kwargs={'sockets':[self.socket]}, daemon=True, name='LianZhi HTTP')
         self.thread.start()
         deadline = time.monotonic()+15
@@ -63,6 +66,7 @@ def main():
     handler = RotatingFileHandler(paths['logs']/'desktop.log', maxBytes=1024*1024, backupCount=2, encoding='utf-8')
     logging.basicConfig(handlers=[handler], level=logging.WARNING, format='%(asctime)s %(levelname)s %(name)s %(message)s')
     server = LocalServer(int(os.environ.get('LIANZHI_DESKTOP_PORT', '8765')))
+    status = 0
     try:
         import webview
         webview.settings['ALLOW_DOWNLOADS'] = True  # Preserve the existing Markdown export action.
@@ -85,17 +89,18 @@ def main():
                 if webview.windows:
                     window.destroy()
         webview.start(test_close, gui='edgechromium', debug=False, private_mode=False, storage_path=str(paths['cache']/'webview'))
-        return 0
     except Exception as exc:
         # Exception text can originate from third parties; avoid logging secrets or user content.
         logging.error('Desktop startup/shutdown failure: %s', type(exc).__name__)
         message = '炼知无法启动。请检查 Edge WebView2 Runtime、目录权限、8765端口及是否已有同目录应用运行。\n日志：'+str(paths['logs']/'desktop.log')
         if os.name == 'nt' and os.environ.get('LIANZHI_DESKTOP_TEST') != '1':
             ctypes.windll.user32.MessageBoxW(None, message, '炼知启动失败', 0x10)
-        return 1
+        status = 1
     finally:
         try:
             server.close()
         except RuntimeError:
             logging.error('Local server shutdown timed out')
+            status = 1
         handler.close()
+    return status

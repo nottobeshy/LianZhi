@@ -39,6 +39,8 @@ const {chromium}=require('playwright');
     await nav('challenge');
     await page.locator('#vocab-file').setInputFiles({name:'候选词库.md',mimeType:'text/markdown',buffer:Buffer.from('# 包体验收词库\n## 入门\n- 独立事件\n- 样本空间\n')});
     await page.locator('[data-action="ch:vocab-import"]').click();
+    const importedId=await page.evaluate(()=>S.vocabs.find(v=>v.name==='包体验收词库').id);
+    await page.locator(`[data-action="ch:vocab"][data-id="${importedId}"]`).click();
     await page.locator('[data-action="ch:draw"]').click();await page.waitForFunction(()=>S.ch.drawDone);
     await page.locator('[data-action="ch:open-card"]').click();await page.locator('[data-action="ch:timer-start"]').click();
     await page.locator('[data-action="ch:timer-pause"]').click();await page.locator('[data-action="ch:learned"]').click();

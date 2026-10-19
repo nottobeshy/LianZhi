@@ -18,6 +18,6 @@ a = Analysis([str(root/'desktop_entry.py')], pathex=[str(root)], datas=datas,
     excludes=['pytest','tkinter','PyQt5','PyQt6','PySide2','PySide6','cefpython3','IPython','matplotlib'], noarchive=False)
 pyz = PYZ(a.pure)
 # Shared PYZ/dependencies; worker is console-enabled for pipe output, launched CREATE_NO_WINDOW.
-exe = EXE(pyz,a.scripts,[],exclude_binaries=True,name='LianZhi',console=False,debug=False,upx=False)
-worker = EXE(pyz,a.scripts,[],exclude_binaries=True,name='LianZhi-worker',console=True,debug=False,upx=False)
+exe = EXE(pyz,a.scripts,[],exclude_binaries=True,name='LianZhi',console=False,debug=False,upx=False,version=str(root/'build/release-metadata/version-info.txt'))
+worker = EXE(pyz,a.scripts,[],exclude_binaries=True,name='LianZhi-worker',console=True,debug=False,upx=False,version=str(root/'build/release-metadata/version-info.txt'))
 coll = COLLECT(exe,worker,a.binaries,a.datas,strip=False,upx=False,name='LianZhi')

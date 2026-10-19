@@ -20,6 +20,14 @@ def main():
         raise SystemExit('Commit source changes before building; source/EXE identity must be reviewable.')
     info=dict(version=VERSION,commit=git('rev-parse','HEAD'),candidate=True,python=sys.version.split()[0],platform='Windows-x64')
     (target/'build-info.json').write_text(json.dumps(info,indent=2),encoding='utf-8')
+    version_tuple=tuple(map(int,VERSION.split('.')))+(0,)
+    (target/'version-info.txt').write_text(f'''VSVersionInfo(
+  ffi=FixedFileInfo(filevers={version_tuple!r},prodvers={version_tuple!r},mask=0x3f,flags=0,OS=0x40004,fileType=1,subtype=0,date=(0,0)),
+  kids=[StringFileInfo([StringTable('040904B0',[
+    StringStruct('FileDescription','LianZhi'),StringStruct('FileVersion','{VERSION}'),
+    StringStruct('ProductName','LianZhi'),StringStruct('ProductVersion','{VERSION}')])]),
+    VarFileInfo([VarStruct('Translation',[1033,1200])])])
+''',encoding='utf-8')
     licenses=target/'third-party-licenses';licenses.mkdir(exist_ok=True)
     inventory=[]
     for dist in sorted(metadata.distributions(),key=lambda d:d.metadata['Name'].lower()):

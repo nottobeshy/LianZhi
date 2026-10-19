@@ -16,7 +16,7 @@ def free_port():
 
 
 @pytest.mark.skipif(not os.environ.get('LIANZHI_DESKTOP_EXE'),reason='Opt-in tested onedir EXE and installed WebView2 required')
-def test_actual_webview_package_restart_and_local_asr(tmp_path):
+def test_actual_webview_package_restart_and_local_asr(tmp_path,request):
     exe=Path(os.environ['LIANZHI_DESKTOP_EXE']).resolve()
     assert exe.is_file()
     root=Path(__file__).resolve().parent.parent
@@ -28,6 +28,8 @@ def test_actual_webview_package_restart_and_local_asr(tmp_path):
         LIANZHI_ASR_MODEL_DIR=os.environ['LIANZHI_PACKAGE_MODEL'],LIANZHI_DESKTOP_TEST='1',
         LIANZHI_READY_FILE=str(ready),LIANZHI_CLOSE_FILE=str(close),LIANZHI_DESKTOP_PORT=str(port),LIANZHI_DEBUG_PORT=str(debug))
     results=[]
+    from backend.services.credentials import CredentialStore
+    request.addfinalizer(lambda:CredentialStore(tmp_path/'用户 数据').delete('https://api.deepseek.com'))
     for restart in [False,True]:
         ready.unlink(missing_ok=True);close.unlink(missing_ok=True)
         process=subprocess.Popen([str(exe)],cwd=tmp_path,env=env,creationflags=subprocess.CREATE_NO_WINDOW)
@@ -57,4 +59,5 @@ def test_actual_webview_package_restart_and_local_asr(tmp_path):
                 try:process.wait(timeout=20)
                 except subprocess.TimeoutExpired:process.kill();process.wait(timeout=5)
     (tmp_path/'desktop-evidence.json').write_text(json.dumps(dict(build=info,results=results,cloud_requests=0),indent=2),encoding='utf-8')
+    assert 'ERROR' not in (tmp_path/'日志/desktop.log').read_text(encoding='utf-8'), 'Desktop log contains errors; inspect isolated evidence'
     print('Actual frozen WebView2 / ASR / vault / restart:',json.dumps(results))

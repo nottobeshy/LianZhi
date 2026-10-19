@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import zipfile
+import pefile
 
 
 def main():
@@ -13,6 +14,10 @@ def main():
         assert not file.is_symlink(), 'Do not package symlinks'
         assert file.suffix.lower() not in forbidden and file.name not in ('.env','llm-settings.json','app.lock','model.bin'), file.name
     assert (app/'LianZhi.exe').is_file() and (app/'LianZhi-worker.exe').is_file()
+    for filename,subsystem in [('LianZhi.exe',2),('LianZhi-worker.exe',3)]:
+        with pefile.PE(str(app/filename)) as pe:
+            assert pe.FILE_HEADER.Machine==0x8664 and pe.OPTIONAL_HEADER.Subsystem==subsystem
+            assert pe.VS_FIXEDFILEINFO[0].FileVersionMS==1, 'Expected v0.1.x file resource'
     output=Path('release-artifacts');output.mkdir(exist_ok=True)
     archive=output/f"LianZhi-v{info['version']}-windows-x64-candidate.zip"
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
