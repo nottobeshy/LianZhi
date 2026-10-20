@@ -1,3 +1,17 @@
+# 2026-10-20 README 图文版发布
+
+本轮仅按用户已确认的图文ZIP发布新版README与四张真实截图，并同步本交接，不开发功能、不重封装、不调用收费模型、不修改Release或标签。ZIP来源为用户提供的E:/Projects/KnowledgeCompass/LianZhi_README_with_screenshots.zip，SHA256=4f1a8f02cfc89877c68b6bb40c22e6162008eba66c3aaf8bde5bed83a9e422f3。tar/ZipFile确认恰好README.md、assets/screenshots/01-home.png、02-knowledge-challenge.png、03-video-review.png、04-knowledge-works.png五个文件；拒绝绝对路径、..、反斜线、盘符和符号链接，CRC完整后先解压临时目录再复制。
+
+原工作区codex/windows-release存在未提交README及其他用户文件，全部保留。远程main从0682946更新至74e6557，本轮从origin/main创建隔离codex/readme-screenshots-publish worktree，只提交上述五个文件及HANDOFF.md，不混入本地开发分支的其他提交，无强推。托管worktree工具因仓库所有权检查失败，使用单命令safe.directory的git worktree创建，无全局Git配置修改。
+
+README与ZIP字节一致，没有重写或技术事实修正。Pillow完整解码四张PNG，尺寸分别为1705×1315、1528×1450、2048×606、1618×582，安装后SHA256与ZIP原图逐一一致，未压缩/裁剪/替换。四张相对图片引用与alt匹配，24处相对文件引用存在；主图/并排table/视频图HTML布局保留。截图中的Demo Mock及视频上传入口已如实注明，不宣称为真实云端对话或AI稿对照；无实际Key。Markdown原有行末双空格为有意换行，保留。
+
+只读GitHub API确认v0.1.0已公开发布，Windows资产120215595字节、digest sha256:5444138a72ced6a0a956b5cf18546ed0988c687084d64e2f993a343ffc5892d9，与新版README一致；使用/源码/安全/许可/技术文档链接文件均存在。本轮没有修改发布资产。
+
+内置浏览器工具因沙箱运行时初始化失败；独立无用户资料的Playwright Chromium已成功访问实际GitHub首页（HTTP200）。内容提交SHA、普通推送main结果及推送后实际页面/图片验证将以本节后续补记为准，不提前标通过。按用户范围不重跑业务测试，仅验证文档/图片。完成后停止；建议后续软件版本变化时同步README资产校验值与截图，不在本轮变更软件。
+
+---
+
 # 2026-10-19 GitHub仓库与MIT许可准备
 
 用户明确指定仓库名LianZhi、自身源码MIT，目标nottobeshy/LianZhi。已通过本机Git Credential Manager验证账号并创建 **私有** 仓库：https://github.com/nottobeshy/LianZhi 。不公开仓库、不创建Release、不新建发布标签、不发真实AI请求。连接器没有建仓工具，浏览器自动化两次初始化因沙箱运行时失败；最终通过标准Git凭据和GitHub官方API成功，令牌仅进程内使用，未显示或落盘。
