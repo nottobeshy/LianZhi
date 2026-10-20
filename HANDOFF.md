@@ -1,3 +1,13 @@
+# 2026-10-20 README 与 Windows 使用指南事实核查及文案更新
+
+在已有四张真实截图已推送的基础上，调整根 README 的阅读顺序、反馈渠道、已知限制、替代方案比较、隐私数据项及开发测试命令。保留 assets/screenshots/ 下四张原始 PNG，不生成或伪造模型问答截图，不修改产品业务代码。
+
+核对事实：截至本次读取，main 分支 desktop/paths.py 默认 LLM_MAX_REQUESTS=10；公开 v0.1.0 标签对应同文件默认 0，GitHub Release ZIP 的内置运行配置未独立解析，故不把 main 的 10 当作发布包实际值。GitHub v0.1.0 已公开、prerelease=false、唯一 ZIP 资产 sha256=5444138a72ced6a0a956b5cf18546ed0988c687084d64e2f993a343ffc5892d9；没有 SHA256SUMS.txt 资产。公开源码的 LLMService.status 提供 live_limit 和 live_requests，但未核实设置 UI 具备持久化修改上限的接口。真实 DeepSeek 源码联调记录在 docs/VIDEO_REVIEW.md，未新增真实模型请求或付费测试。
+
+本轮仅文档更新：README.md、docs/releases/WINDOWS_QUICKSTART.md、HANDOFF.md。未执行 Windows 实际包体验收、干净 clone、pytest、Node 测试或浏览器视觉验收；原有截图已在远端仓库、引用路径经 Git 树核对。后续待完成：用发布 ZIP 复核实际本地默认上限与云端 live 调用、如希望添加 SHA256SUMS.txt Release 资产需另行发布并同步校验、补充获授权的真实 AI 追问/文案对照截图；旧技术文档中历史“未公开发布”等表述仍需要后续专项核对。
+
+---
+
 # 2026-10-20 README 图文版发布
 
 ## 发布与在线验收结果
