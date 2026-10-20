@@ -1,5 +1,13 @@
 # 2026-10-20 README 图文版发布
 
+## 发布与在线验收结果
+
+内容提交 **b5531c52b0a875e5a4b0fca049e211670b43f0e1**（docs: add product screenshots and refine README）已从74e6557正常快进推送至origin/main，提交严格只有README.md、HANDOFF.md及四张PNG。GitHub API确认main指向该提交；远程README和四图分别HTTP200、PNG均可完整解码，四图SHA256与ZIP原图完全相同，README文本与ZIP一致（Git仅作换行规范化），无需任何技术事实修正。
+
+**实际GitHub首页浏览器显示验证通过**：独立Playwright Chromium经当前本机网络访问公开仓库，检查标题/两句宣传语、四张图各自naturalWidth>0/比例正确、主图完整、知识挑战与知识作品在同一表格行左右并排、视频上传图完整展示；下载入口与源码安装代码块及使用/复现/构建/架构/安全链接正常渲染。浏览器截图已人工查看确认，证据在原工程忽略目录.test-runtime/readme-proof-20261020/，含完整主图、并排表格、视频图、顶部页面及browser-validation/api-validation.json；不是只凭文件存在就声明视觉通过。
+
+原工作区未提交README的SHA256保持3cf16d01dda10b629bd627d758b4e9c55713a820a6e8712a34e3da97be9e38d6，原ZIP/output/词库用户文件未动，未把本地其他开发提交推到main。无合并冲突，无强推、无业务代码/Release/标签变更。按文档任务未运行完整业务测试；本轮要求的文档/图片/在线显示检查完成，未扩展到其他浏览器或移动设备。此补记将作为仅HANDOFF的验收记录正常推送；内容提交身份以b5531c5为准。
+
 本轮仅按用户已确认的图文ZIP发布新版README与四张真实截图，并同步本交接，不开发功能、不重封装、不调用收费模型、不修改Release或标签。ZIP来源为用户提供的E:/Projects/KnowledgeCompass/LianZhi_README_with_screenshots.zip，SHA256=4f1a8f02cfc89877c68b6bb40c22e6162008eba66c3aaf8bde5bed83a9e422f3。tar/ZipFile确认恰好README.md、assets/screenshots/01-home.png、02-knowledge-challenge.png、03-video-review.png、04-knowledge-works.png五个文件；拒绝绝对路径、..、反斜线、盘符和符号链接，CRC完整后先解压临时目录再复制。
 
 原工作区codex/windows-release存在未提交README及其他用户文件，全部保留。远程main从0682946更新至74e6557，本轮从origin/main创建隔离codex/readme-screenshots-publish worktree，只提交上述五个文件及HANDOFF.md，不混入本地开发分支的其他提交，无强推。托管worktree工具因仓库所有权检查失败，使用单命令safe.directory的git worktree创建，无全局Git配置修改。
