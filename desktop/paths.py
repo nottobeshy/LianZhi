@@ -14,5 +14,5 @@ def prepare():
     os.environ.setdefault('LIANZHI_DATA_DIR', str(data))
     os.environ.setdefault('LIANZHI_ASR_MODEL_DIR', str(cache/'models/faster-whisper-small'))
     # Candidate acceptance never silently renews the previous three-call authorization.
-    os.environ.setdefault('LLM_MAX_REQUESTS', '0')
+    os.environ.setdefault('LLM_MAX_REQUESTS', '10')
     return dict(data=data, cache=cache, logs=logs, config=config)
