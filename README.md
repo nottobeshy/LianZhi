@@ -17,7 +17,7 @@
 <p align="center"><sub>实际软件首页截图，点击可查看原图。截图中的「Demo Mock」为截取时的演示模式标识，不代表项目仅支持模拟模型。</sub></p>
 
 **[下载 Windows 预览版](https://github.com/nottobeshy/LianZhi/releases/tag/v0.1.0)** · [源代码](https://github.com/nottobeshy/LianZhi) · [使用指南](docs/releases/WINDOWS_QUICKSTART.md)
-##简介
+## 简介
 按下回车，AI 几秒钟就能解释一个讨论了数百年的哲学问题。我们读完，点点头，觉得这些知识已经是自己的了。可如果有人关掉屏幕，问一句："那你能自己讲给我听吗？"我们也许会沉默。
 
 获取答案的成本越来越低，自己把一件事讲清楚的机会，会不会也随之变少？如果 AI 不急着给答案，而是等我们先开口，会发生什么？
@@ -169,7 +169,7 @@ Pop-Location
 
 欢迎通过 [GitHub Issues](https://github.com/nottobeshy/LianZhi/issues) 提交问题，尽量附上软件版本、Windows 版本和复现步骤。日志位于 Windows 用户目录（具体见[使用指南](docs/releases/WINDOWS_QUICKSTART.md)）；上传日志或截图前，请先移除 API Key、私人路径及不希望公开的转写文字。
 
-##意义
+## 意义
 这个时代，答案便宜得像空气。
 便宜到我们开始分不清：哪些是自己想明白的，哪些只是读过。
 
